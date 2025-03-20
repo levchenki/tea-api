@@ -27,8 +27,9 @@ func Run() {
 
 	teaRepository := postgres.NewTeaRepository(db)
 	tagRepository := postgres.NewTagRepository(db)
+	userRepository := postgres.NewUserRepository(db)
 
-	teaService := service.NewTeaService(teaRepository, tagRepository)
+	teaService := service.NewTeaService(teaRepository, tagRepository, userRepository)
 
 	teaController := controller.NewTeaController(teaService)
 

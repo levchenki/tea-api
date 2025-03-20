@@ -3,7 +3,7 @@ package schemas
 import "github.com/golang-jwt/jwt/v5"
 
 type TelegramUser struct {
-	ID        int    `json:"id"`
+	Id        int    `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name,omitempty"`
 	Username  string `json:"username,omitempty"`
@@ -13,8 +13,8 @@ type TelegramUser struct {
 }
 
 type TelegramUserClaims struct {
-	ID        int             `json:"id"`
-	FirstName string          `json:"first_name"`
+	Id        int             `json:"id"`
+	FirstName string          `json:"firstName"`
 	Username  string          `json:"username,omitempty"`
 	Exp       jwt.NumericDate `json:"exp"`
 }

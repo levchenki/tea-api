@@ -63,7 +63,7 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	var dataStrings []string
 	dataStrings = append(dataStrings, fmt.Sprintf("auth_date=%d", data.AuthDate))
 	dataStrings = append(dataStrings, fmt.Sprintf("first_name=%s", data.FirstName))
-	dataStrings = append(dataStrings, fmt.Sprintf("id=%d", data.ID))
+	dataStrings = append(dataStrings, fmt.Sprintf("id=%d", data.Id))
 	if data.LastName != "" {
 		dataStrings = append(dataStrings, fmt.Sprintf("last_name=%s", data.LastName))
 	}
@@ -95,7 +95,7 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 func (c *AuthController) generateJWT(user schemas.TelegramUser, jwtSecret string) (string, error) {
 	expDate := time.Now().Add(time.Hour * 1).Unix()
 	claims := jwt.MapClaims{
-		"id":        user.ID,
+		"id":        user.Id,
 		"firstName": user.FirstName,
 		"username":  user.Username,
 		"exp":       expDate,
@@ -182,7 +182,7 @@ func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.TelegramUserCla
 	} else {
 		idInt, ok := id.(float64)
 		if ok {
-			tgClaims.ID = int(idInt)
+			tgClaims.Id = int(idInt)
 		} else {
 			return nil, fmt.Errorf("invalid claims: invalid id")
 		}

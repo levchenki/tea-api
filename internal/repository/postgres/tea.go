@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/levchenki/tea-api/internal/entity"
-	"github.com/levchenki/tea-api/internal/schemas"
+	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"log"
 	"strings"
 )
@@ -22,13 +22,18 @@ func NewTeaRepository(db *sqlx.DB) *TeaRepository {
 	}
 }
 
-func (r *TeaRepository) GetById(id uuid.UUID) (*entity.Tea, error) {
-	tea := entity.Tea{}
-	err := r.db.Get(&tea, `
-		select teas.* 
+func (r *TeaRepository) GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
+	tea := entity.TeaWithRating{}
+	query := `
+		select 
+		    teas.*,
+		    rating,
+			(select avg(rating) from evaluations where tea_id = teas.id) as average_rating
 		from teas
-		where teas.id = $1
-		limit 1`, id)
+	 		join evaluations on teas.id = evaluations.tea_id
+		where teas.id = $1 and user_id = $2
+		limit 1`
+	err := r.db.Get(&tea, query, id, userId)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -39,8 +44,8 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.Tea, error) {
 	return &tea, nil
 }
 
-func (r *TeaRepository) GetAll(filters *schemas.TeaFilters) ([]entity.Tea, error) {
-	teas := make([]entity.Tea, 0)
+func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
+	teas := make([]entity.TeaWithRating, 0)
 
 	namedQuery, args, err := r.prepareFilteredQuery(filters)
 	if err != nil {
@@ -57,9 +62,16 @@ func (r *TeaRepository) GetAll(filters *schemas.TeaFilters) ([]entity.Tea, error
 	return teas, nil
 }
 
-func (r *TeaRepository) prepareFilteredQuery(filters *schemas.TeaFilters) (string, []interface{}, error) {
+func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
 	filterStatements := make([]string, 0, 10)
-	query := "select teas.* from teas"
+	var query string
+	if filters.UserId != uuid.Nil {
+		query = "select teas.*, coalesce(rating, 0) as rating from teas left join evaluations e on teas.id = e.tea_id"
+		userStmt := "(e.user_id = :user_id or rating is null)"
+		filterStatements = append(filterStatements, userStmt)
+	} else {
+		query = "select teas.* from teas"
+	}
 
 	if filters.CategoryId != uuid.Nil {
 		categoryStmt := "category_id = :category_id"
@@ -115,7 +127,7 @@ func (r *TeaRepository) prepareFilteredQuery(filters *schemas.TeaFilters) (strin
 	return query, args, nil
 }
 
-func (r *TeaRepository) Create(inputTea *schemas.TeaRequestModel) (*entity.Tea, error) {
+func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error) {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return nil, err
@@ -138,7 +150,7 @@ func (r *TeaRepository) Create(inputTea *schemas.TeaRequestModel) (*entity.Tea, 
 	}
 
 	if len(inputTea.TagIds) != 0 {
-		err := r.insertTags(&createdTea.Id, inputTea.TagIds, tx)
+		err := r.insertTags(createdTea.Id, inputTea.TagIds, tx)
 		if err != nil {
 			errRollback := tx.Rollback()
 			if errRollback != nil {
@@ -176,7 +188,7 @@ func (r *TeaRepository) insertTea(inputTea *entity.Tea, tx *sqlx.Tx) (*entity.Te
 	return createdTea, nil
 }
 
-func (r *TeaRepository) insertTags(teaId *uuid.UUID, tagIds []uuid.UUID, tx *sqlx.Tx) error {
+func (r *TeaRepository) insertTags(teaId uuid.UUID, tagIds []uuid.UUID, tx *sqlx.Tx) error {
 	teaTags := make([]map[string]interface{}, 0, len(tagIds))
 	for _, tagId := range tagIds {
 		teaTags = append(teaTags, map[string]interface{}{
@@ -193,7 +205,7 @@ func (r *TeaRepository) insertTags(teaId *uuid.UUID, tagIds []uuid.UUID, tx *sql
 	return nil
 }
 
-func (r *TeaRepository) deleteTags(teaId *uuid.UUID, tagIds []uuid.UUID, tx *sqlx.Tx) error {
+func (r *TeaRepository) deleteTags(teaId uuid.UUID, tagIds []uuid.UUID, tx *sqlx.Tx) error {
 	tagIdsStr := make([]string, len(tagIds))
 	for i, tagId := range tagIds {
 		tagIdsStr[i] = tagId.String()
@@ -226,7 +238,7 @@ func (r *TeaRepository) deleteTags(teaId *uuid.UUID, tagIds []uuid.UUID, tx *sql
 	return nil
 }
 
-func (r *TeaRepository) Update(id *uuid.UUID, inputTea *schemas.TeaRequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error) {
+func (r *TeaRepository) Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error) {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return nil, err
@@ -239,6 +251,9 @@ func (r *TeaRepository) Update(id *uuid.UUID, inputTea *schemas.TeaRequestModel,
 			return nil, errRollback
 		}
 		return nil, err
+	}
+	if updatedTea == nil {
+		return nil, nil
 	}
 
 	if len(tagsToInsert) != 0 {
@@ -270,9 +285,9 @@ func (r *TeaRepository) Update(id *uuid.UUID, inputTea *schemas.TeaRequestModel,
 	return updatedTea, nil
 }
 
-func (r *TeaRepository) updateTea(id *uuid.UUID, inputTea *schemas.TeaRequestModel, tx *sqlx.Tx) (*entity.Tea, error) {
+func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestModel, tx *sqlx.Tx) (*entity.Tea, error) {
 	tea := &entity.Tea{
-		Id:          *id,
+		Id:          id,
 		Name:        inputTea.Name,
 		Price:       inputTea.Price,
 		Description: inputTea.Description,
@@ -300,6 +315,9 @@ func (r *TeaRepository) updateTea(id *uuid.UUID, inputTea *schemas.TeaRequestMod
 		if err != nil {
 			return nil, err
 		}
+	}
+	if updatedTea.Id == uuid.Nil {
+		return nil, nil
 	}
 	rows.Close()
 	return updatedTea, nil

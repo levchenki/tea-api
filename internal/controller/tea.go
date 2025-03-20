@@ -8,15 +8,16 @@ import (
 	"github.com/levchenki/tea-api/internal/api"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/schemas"
+	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"net/http"
 )
 
 type TeaService interface {
-	GetTeaById(id uuid.UUID) (*entity.Tea, error)
-	GetAllTeas(filters *schemas.TeaFilters) ([]entity.Tea, error)
-	CreateTea(tea *schemas.TeaRequestModel) (*entity.Tea, error)
+	GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithRating, error)
+	GetAllTeas(filters *teaSchemas.Filters, telegramUserId int) ([]entity.TeaWithRating, error)
+	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) (bool, error)
-	UpdateTea(id uuid.UUID, tea *schemas.TeaRequestModel) (*entity.Tea, error)
+	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
 }
 
 type TeaController struct {
@@ -37,7 +38,9 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teaById, err := c.teaService.GetTeaById(id)
+	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+	teaById, err := c.teaService.GetTeaById(id, userClaims.Id)
+
 	if err != nil {
 		errResponse := api.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
@@ -53,13 +56,13 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, schemas.NewTeaResponseModel(teaById))
+	response := teaSchemas.NewTeaWithRatingResponseModel(teaById)
+	render.JSON(w, r, response)
 }
 
 func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
-	filters := &schemas.TeaFilters{}
-	claims := r.Context().Value("user")
-	fmt.Println(claims)
+	filters := &teaSchemas.Filters{}
+
 	if err := filters.Validate(r); err != nil {
 		errorResponse := api.ErrorBadRequest(err)
 		render.Status(r, errorResponse.HTTPStatusCode)
@@ -67,7 +70,9 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teas, err := c.teaService.GetAllTeas(filters)
+	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+
+	teas, err := c.teaService.GetAllTeas(filters, userClaims.Id)
 	if err != nil {
 		errResponse := api.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
@@ -75,16 +80,16 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make([]*schemas.TeaResponseModel, len(teas))
+	response := make([]*teaSchemas.WithRatingResponseModel, len(teas))
 	for i := range teas {
-		response[i] = schemas.NewTeaResponseModel(&teas[i])
+		response[i] = teaSchemas.NewTeaWithRatingResponseModel(&teas[i])
 	}
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, response)
 }
 
 func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
-	teaRequest := &schemas.TeaRequestModel{}
+	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
 		errResponse := api.ErrorBadRequest(err)
 		render.Status(r, errResponse.HTTPStatusCode)
@@ -98,7 +103,7 @@ func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, errResponse)
 	}
 	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, schemas.NewTeaResponseModel(tea))
+	render.JSON(w, r, teaSchemas.NewTeaResponseModel(tea))
 }
 
 func (c *TeaController) DeleteTea(w http.ResponseWriter, r *http.Request) {
@@ -131,11 +136,12 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teaRequest := &schemas.TeaRequestModel{}
+	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
 		errResponse := api.ErrorBadRequest(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
+		return
 	}
 
 	tea, err := c.teaService.UpdateTea(id, teaRequest)
@@ -143,6 +149,7 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 		errResponse := api.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
+		return
 	}
 
 	if tea == nil {

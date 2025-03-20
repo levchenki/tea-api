@@ -17,3 +17,9 @@ type Tea struct {
 
 	Tags []Tag `json:"tags,omitempty"`
 }
+
+type TeaWithRating struct {
+	Tea
+	Rating        float64 `db:"rating,omitempty"`
+	AverageRating float64 `db:"average_rating, omitempty"`
+}

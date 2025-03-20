@@ -3,37 +3,56 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
-	"github.com/levchenki/tea-api/internal/schemas"
+	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 )
 
 type TeaRepository interface {
-	GetById(id uuid.UUID) (*entity.Tea, error)
-	GetAll(filters *schemas.TeaFilters) ([]entity.Tea, error)
-	Create(inputTea *schemas.TeaRequestModel) (*entity.Tea, error)
+	GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
+	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
+	Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Delete(id uuid.UUID) (bool, error)
-	Update(id *uuid.UUID, inputTea *schemas.TeaRequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error)
+	Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error)
 }
 
 type TagRepository interface {
 	GetByTeaId(teaId uuid.UUID) ([]entity.Tag, error)
 }
 
-type Service struct {
-	teaRepository TeaRepository
-	tagRepository TagRepository
+type UserRepository interface {
+	GetId(telegramId int) (uuid.UUID, error)
 }
 
-func NewTeaService(teaRepository TeaRepository, tagRepository TagRepository) *Service {
+type Service struct {
+	teaRepository  TeaRepository
+	tagRepository  TagRepository
+	userRepository UserRepository
+}
+
+func NewTeaService(
+	teaRepository TeaRepository,
+	tagRepository TagRepository,
+	userRepository UserRepository,
+) *Service {
 	return &Service{
-		teaRepository: teaRepository,
-		tagRepository: tagRepository,
+		teaRepository:  teaRepository,
+		tagRepository:  tagRepository,
+		userRepository: userRepository,
 	}
 }
 
-func (s *Service) GetTeaById(id uuid.UUID) (*entity.Tea, error) {
-	teaById, err := s.teaRepository.GetById(id)
+func (s *Service) GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithRating, error) {
+	userId, err := s.userRepository.GetId(telegramUserId)
 	if err != nil {
 		return nil, err
+	}
+
+	teaById, err := s.teaRepository.GetById(id, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if teaById == nil {
+		return nil, nil
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)
@@ -45,7 +64,12 @@ func (s *Service) GetTeaById(id uuid.UUID) (*entity.Tea, error) {
 	return teaById, nil
 }
 
-func (s *Service) GetAllTeas(filters *schemas.TeaFilters) ([]entity.Tea, error) {
+func (s *Service) GetAllTeas(filters *teaSchemas.Filters, telegramUserId int) ([]entity.TeaWithRating, error) {
+	userId, err := s.userRepository.GetId(telegramUserId)
+	if err != nil {
+		return nil, err
+	}
+	filters.UserId = userId
 	allTeas, err := s.teaRepository.GetAll(filters)
 	if err != nil {
 		return nil, err
@@ -54,7 +78,7 @@ func (s *Service) GetAllTeas(filters *schemas.TeaFilters) ([]entity.Tea, error) 
 	return allTeas, err
 }
 
-func (s *Service) CreateTea(t *schemas.TeaRequestModel) (*entity.Tea, error) {
+func (s *Service) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
 	createdTea, err := s.teaRepository.Create(t)
 	if err != nil {
 		return nil, err
@@ -77,7 +101,7 @@ func (s *Service) DeleteTea(id uuid.UUID) (bool, error) {
 	return isDeleted, nil
 }
 
-func (s *Service) UpdateTea(id uuid.UUID, t *schemas.TeaRequestModel) (*entity.Tea, error) {
+func (s *Service) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entity.Tea, error) {
 	tags, err := s.tagRepository.GetByTeaId(id)
 	if err != nil {
 		return nil, err
@@ -90,9 +114,13 @@ func (s *Service) UpdateTea(id uuid.UUID, t *schemas.TeaRequestModel) (*entity.T
 
 	tagsToInsert, tagsToDelete := s.getTagsDelta(existedTagIds, t.TagIds)
 
-	updatedTea, err := s.teaRepository.Update(&id, t, tagsToInsert, tagsToDelete)
+	updatedTea, err := s.teaRepository.Update(id, t, tagsToInsert, tagsToDelete)
 	if err != nil {
 		return nil, err
+	}
+
+	if updatedTea == nil {
+		return nil, nil
 	}
 
 	tags, err = s.tagRepository.GetByTeaId(id)
