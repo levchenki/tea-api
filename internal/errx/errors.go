@@ -1,4 +1,4 @@
-package api
+package errx
 
 import (
 	"net/http"
@@ -8,6 +8,10 @@ type ErrorResponse struct {
 	Err            error  `json:"-"`
 	HTTPStatusCode int    `json:"-"`
 	ErrorText      string `json:"error,omitempty"`
+}
+
+func (e *ErrorResponse) Error() string {
+	return e.Err.Error()
 }
 
 func ErrorBadRequest(err error) *ErrorResponse {

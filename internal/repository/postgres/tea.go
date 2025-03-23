@@ -25,15 +25,16 @@ func NewTeaRepository(db *sqlx.DB) *TeaRepository {
 func (r *TeaRepository) GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
-		select 
-		    teas.*,
-		    rating,
-			(select avg(rating) from evaluations where tea_id = teas.id) as average_rating
+		select
+			teas.*,
+			coalesce(rating, 0) as rating,
+			coalesce(note, '') as note,
+			coalesce((select avg(rating) from evaluations where tea_id = teas.id), 0) as average_rating
 		from teas
-	 		join evaluations on teas.id = evaluations.tea_id
-		where teas.id = $1 and user_id = $2
+	 		left join evaluations on teas.id = evaluations.tea_id and user_id = $1
+		where teas.id = $2 
 		limit 1`
-	err := r.db.Get(&tea, query, id, userId)
+	err := r.db.Get(&tea, query, userId, id)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -79,7 +80,8 @@ func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (strin
 	}
 
 	if filters.Name != "" {
-		nameStmt := "name like %:name%"
+		nameStmt := "name like :name"
+		filters.Name = fmt.Sprintf("%%%s%%", filters.Name)
 		filterStatements = append(filterStatements, nameStmt)
 	}
 
@@ -252,9 +254,6 @@ func (r *TeaRepository) Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, 
 		}
 		return nil, err
 	}
-	if updatedTea == nil {
-		return nil, nil
-	}
 
 	if len(tagsToInsert) != 0 {
 		err = r.insertTags(id, tagsToInsert, tx)
@@ -316,17 +315,15 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 			return nil, err
 		}
 	}
-	if updatedTea.Id == uuid.Nil {
-		return nil, nil
-	}
+
 	rows.Close()
 	return updatedTea, nil
 }
 
-func (r *TeaRepository) Delete(id uuid.UUID) (bool, error) {
+func (r *TeaRepository) Delete(id uuid.UUID) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	_, err = tx.Exec("delete from teas_tags where tea_id = $1", id)
@@ -334,23 +331,72 @@ func (r *TeaRepository) Delete(id uuid.UUID) (bool, error) {
 	if err != nil {
 		errRollback := tx.Rollback()
 		if errRollback != nil {
-			return false, errRollback
+			return errRollback
 		}
-		return false, err
+		return err
 	}
 
 	_, err = tx.Exec("delete from teas where id = $1", id)
 	if err != nil {
 		errRollback := tx.Rollback()
 		if errRollback != nil {
-			return false, errRollback
+			return errRollback
 		}
-		return false, err
+		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) Exists(id uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.Get(&exists, "select exists(select 1 from teas where id = $1)", id)
+	if err != nil {
 		return false, err
 	}
-	return true, nil
+	return exists, nil
+}
+
+func (r *TeaRepository) ExistsByName(existedId uuid.UUID, name string) (bool, error) {
+	var exists bool
+	err := r.db.Get(&exists, "select exists(select 1 from teas where id != $1 and name = $2 )", existedId, name)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (r *TeaRepository) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	query := `
+	insert into evaluations (rating, note, created_at, updated_at, tea_id, user_id)
+	values ($1, $2, now(), now(), $3, $4)
+	on conflict (tea_id, user_id) do update
+		set rating     = excluded.rating,
+			note       = excluded.note,
+			updated_at = now()
+	`
+
+	_, err = tx.Exec(query, evaluation.Rating, evaluation.Note, id, userId)
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }

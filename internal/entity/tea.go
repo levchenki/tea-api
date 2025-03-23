@@ -21,5 +21,6 @@ type Tea struct {
 type TeaWithRating struct {
 	Tea
 	Rating        float64 `db:"rating,omitempty"`
+	Note          string  `db:"note,omitempty"`
 	AverageRating float64 `db:"average_rating, omitempty"`
 }

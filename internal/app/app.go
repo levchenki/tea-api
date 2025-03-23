@@ -59,6 +59,8 @@ func Run() {
 		r.Post("/", teaController.CreateTea)
 		r.Delete("/{id}", teaController.DeleteTea)
 		r.Put("/{id}", teaController.UpdateTea)
+
+		r.Post("/{id}/evaluate", teaController.Evaluate)
 	})
 
 	http.ListenAndServe(fmt.Sprintf(":%s", cfg.Server.Port), r)

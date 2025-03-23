@@ -20,3 +20,15 @@ func (tr *RequestModel) Bind(r *http.Request) error {
 	}
 	return nil
 }
+
+type Evaluation struct {
+	Rating float64 `json:"rating"`
+	Note   string  `json:"note"`
+}
+
+func (e *Evaluation) Bind(r *http.Request) error {
+	if e.Rating < 1 || e.Rating > 10 {
+		return fmt.Errorf("rating should be between 1 and 10 ")
+	}
+	return nil
+}

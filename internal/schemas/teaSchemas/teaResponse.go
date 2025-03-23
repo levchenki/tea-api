@@ -32,6 +32,7 @@ type WithRatingResponseModel struct {
 	ResponseModel
 	Rating        float64 `json:"rating,omitempty"`
 	AverageRating float64 `json:"averageRating,omitempty"`
+	Note          string  `json:"note,omitempty"`
 }
 
 func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingResponseModel {
@@ -52,6 +53,9 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 	}
 	if tea.AverageRating != 0 {
 		t.AverageRating = tea.AverageRating
+	}
+	if tea.Note != "" {
+		t.Note = tea.Note
 	}
 	return t
 }

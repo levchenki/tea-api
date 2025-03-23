@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/levchenki/tea-api/internal/api"
+	"github.com/levchenki/tea-api/internal/errx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"net/http"
 	"sort"
@@ -29,14 +29,14 @@ func NewAuthController(jwtSecret, botToken string) *AuthController {
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	var user schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		errResponse := api.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
+		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
 	}
 
 	if err := c.verifyTelegramAuth(user); err != nil {
-		errResponse := api.ErrorForbidden(fmt.Errorf("telegram verification error: %w", err))
+		errResponse := errx.ErrorForbidden(fmt.Errorf("telegram verification error: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -44,7 +44,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	token, err := c.generateJWT(user, c.jwtSecret)
 	if err != nil {
-		errResponse := api.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
+		errResponse := errx.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -108,7 +108,7 @@ func (c *AuthController) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer") {
-			errResponse := api.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
+			errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
 			render.Status(r, errResponse.HTTPStatusCode)
 			render.JSON(w, r, errResponse)
 			return
@@ -118,7 +118,7 @@ func (c *AuthController) AuthMiddleware(next http.Handler) http.Handler {
 		token, err := c.parseToken(tokenString, c.jwtSecret)
 
 		if err != nil {
-			errResponse := api.ErrorUnauthorized(err)
+			errResponse := errx.ErrorUnauthorized(err)
 			render.Status(r, errResponse.HTTPStatusCode)
 			render.JSON(w, r, errResponse)
 			return
@@ -131,7 +131,7 @@ func (c *AuthController) AuthMiddleware(next http.Handler) http.Handler {
 		claims, err := c.parseClaims(token)
 
 		if err != nil {
-			errResponse := api.ErrorUnauthorized(err)
+			errResponse := errx.ErrorUnauthorized(err)
 			render.Status(r, errResponse.HTTPStatusCode)
 			render.JSON(w, r, errResponse)
 			return

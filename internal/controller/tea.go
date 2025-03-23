@@ -1,12 +1,13 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/levchenki/tea-api/internal/api"
 	"github.com/levchenki/tea-api/internal/entity"
+	"github.com/levchenki/tea-api/internal/errx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"net/http"
@@ -16,8 +17,9 @@ type TeaService interface {
 	GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithRating, error)
 	GetAllTeas(filters *teaSchemas.Filters, telegramUserId int) ([]entity.TeaWithRating, error)
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
-	DeleteTea(id uuid.UUID) (bool, error)
+	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
+	Evaluate(id uuid.UUID, telegramUserId int, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
 }
 
 type TeaController struct {
@@ -32,7 +34,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := api.ErrorBadRequest(fmt.Errorf("invalid id"))
+		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -42,14 +44,14 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	teaById, err := c.teaService.GetTeaById(id, userClaims.Id)
 
 	if err != nil {
-		errResponse := api.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
-		return
-	}
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, err.(*errx.ErrorResponse).HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
 
-	if teaById == nil {
-		errResponse := api.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -64,7 +66,7 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 	filters := &teaSchemas.Filters{}
 
 	if err := filters.Validate(r); err != nil {
-		errorResponse := api.ErrorBadRequest(err)
+		errorResponse := errx.ErrorBadRequest(err)
 		render.Status(r, errorResponse.HTTPStatusCode)
 		render.JSON(w, r, errorResponse)
 		return
@@ -74,7 +76,7 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 
 	teas, err := c.teaService.GetAllTeas(filters, userClaims.Id)
 	if err != nil {
-		errResponse := api.ErrorInternalServer(err)
+		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -91,14 +93,14 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
 	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
-		errResponse := api.ErrorBadRequest(err)
+		errResponse := errx.ErrorBadRequest(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 	}
 
 	tea, err := c.teaService.CreateTea(teaRequest)
 	if err != nil {
-		errResponse := api.ErrorInternalServer(err)
+		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 	}
@@ -110,27 +112,34 @@ func (c *TeaController) DeleteTea(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := api.ErrorBadRequest(fmt.Errorf("invalid id"))
+		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
 	}
 
-	isDeleted, err := c.teaService.DeleteTea(id)
+	err = c.teaService.DeleteTea(id)
 	if err != nil {
-		errResponse := api.ErrorInternalServer(err)
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, err.(*errx.ErrorResponse).HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
+		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
+		return
 	}
 
-	render.JSON(w, r, isDeleted)
+	render.JSON(w, r, true)
 }
 
 func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := api.ErrorBadRequest(fmt.Errorf("invalid id"))
+		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -138,7 +147,7 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 
 	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
-		errResponse := api.ErrorBadRequest(err)
+		errResponse := errx.ErrorBadRequest(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -146,14 +155,14 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 
 	tea, err := c.teaService.UpdateTea(id, teaRequest)
 	if err != nil {
-		errResponse := api.ErrorInternalServer(err)
+		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
 	}
 
 	if tea == nil {
-		errResponse := api.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		errResponse := errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
@@ -161,4 +170,43 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, tea)
+}
+
+func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
+	strId := chi.URLParam(r, "id")
+	id, err := uuid.Parse(strId)
+	if err != nil {
+		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
+		render.Status(r, errResponse.HTTPStatusCode)
+		render.JSON(w, r, errResponse)
+		return
+	}
+
+	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+
+	evaluation := &teaSchemas.Evaluation{}
+	if err := render.Bind(r, evaluation); err != nil {
+		errorResponse := errx.ErrorBadRequest(err)
+		render.Status(r, errorResponse.HTTPStatusCode)
+		render.JSON(w, r, errorResponse)
+		return
+	}
+
+	evaluatedTea, err := c.teaService.Evaluate(id, userClaims.Id, evaluation)
+	if err != nil {
+		errResponse := errx.ErrorInternalServer(err)
+		render.Status(r, errResponse.HTTPStatusCode)
+		render.JSON(w, r, errResponse)
+		return
+	}
+
+	if evaluatedTea == nil {
+		errResponse := errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		render.Status(r, errResponse.HTTPStatusCode)
+		render.JSON(w, r, errResponse)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, teaSchemas.NewTeaWithRatingResponseModel(evaluatedTea))
 }
