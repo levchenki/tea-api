@@ -14,12 +14,12 @@ import (
 )
 
 type TeaService interface {
-	GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithRating, error)
-	GetAllTeas(filters *teaSchemas.Filters, telegramUserId int) ([]entity.TeaWithRating, error)
+	GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
+	GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]entity.TeaWithRating, error)
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
-	Evaluate(id uuid.UUID, telegramUserId int, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
+	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
 }
 
 type TeaController struct {
@@ -40,7 +40,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+	userClaims := r.Context().Value("user").(*schemas.UserClaims)
 	teaById, err := c.teaService.GetTeaById(id, userClaims.Id)
 
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+	userClaims := r.Context().Value("user").(*schemas.UserClaims)
 
 	teas, err := c.teaService.GetAllTeas(filters, userClaims.Id)
 	if err != nil {
@@ -182,7 +182,7 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.TelegramUserClaims)
+	userClaims := r.Context().Value("user").(*schemas.UserClaims)
 
 	evaluation := &teaSchemas.Evaluation{}
 	if err := render.Bind(r, evaluation); err != nil {

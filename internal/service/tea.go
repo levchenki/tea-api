@@ -23,34 +23,22 @@ type TagRepository interface {
 	GetByTeaId(teaId uuid.UUID) ([]entity.Tag, error)
 }
 
-type UserRepository interface {
-	GetId(telegramId int) (uuid.UUID, error)
-}
-
 type Service struct {
-	teaRepository  TeaRepository
-	tagRepository  TagRepository
-	userRepository UserRepository
+	teaRepository TeaRepository
+	tagRepository TagRepository
 }
 
 func NewTeaService(
 	teaRepository TeaRepository,
 	tagRepository TagRepository,
-	userRepository UserRepository,
 ) *Service {
 	return &Service{
-		teaRepository:  teaRepository,
-		tagRepository:  tagRepository,
-		userRepository: userRepository,
+		teaRepository: teaRepository,
+		tagRepository: tagRepository,
 	}
 }
 
-func (s *Service) GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithRating, error) {
-	userId, err := s.userRepository.GetId(telegramUserId)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Service) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
 	teaById, err := s.teaRepository.GetById(id, userId)
 	if err != nil {
 		return nil, err
@@ -69,11 +57,7 @@ func (s *Service) GetTeaById(id uuid.UUID, telegramUserId int) (*entity.TeaWithR
 	return teaById, nil
 }
 
-func (s *Service) GetAllTeas(filters *teaSchemas.Filters, telegramUserId int) ([]entity.TeaWithRating, error) {
-	userId, err := s.userRepository.GetId(telegramUserId)
-	if err != nil {
-		return nil, err
-	}
+func (s *Service) GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]entity.TeaWithRating, error) {
 	filters.UserId = userId
 	allTeas, err := s.teaRepository.GetAll(filters)
 	if err != nil {
@@ -180,12 +164,7 @@ func (s *Service) getTagsDelta(existedTagIds, incomingTagIds []uuid.UUID) ([]uui
 	return tagIdsToInsert, tagIdsToDelete
 }
 
-func (s *Service) Evaluate(id uuid.UUID, telegramUserId int, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error) {
-	userId, err := s.userRepository.GetId(telegramUserId)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Service) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error) {
 	exists, err := s.teaRepository.Exists(id)
 	if err != nil {
 		return nil, err

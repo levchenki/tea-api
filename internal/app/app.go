@@ -29,13 +29,15 @@ func Run() {
 	tagRepository := postgres.NewTagRepository(db)
 	userRepository := postgres.NewUserRepository(db)
 
-	teaService := service.NewTeaService(teaRepository, tagRepository, userRepository)
+	teaService := service.NewTeaService(teaRepository, tagRepository)
+	userService := service.NewUserService(userRepository)
 
 	teaController := controller.NewTeaController(teaService)
 
 	authController := controller.NewAuthController(
 		cfg.JWTSecretKey,
 		cfg.BotToken,
+		userService,
 	)
 
 	r := chi.NewRouter()

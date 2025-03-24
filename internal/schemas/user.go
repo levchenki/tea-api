@@ -1,9 +1,12 @@
 package schemas
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
 
 type TelegramUser struct {
-	Id        int    `json:"id"`
+	Id        uint64 `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name,omitempty"`
 	Username  string `json:"username,omitempty"`
@@ -12,8 +15,8 @@ type TelegramUser struct {
 	PhotoURL  string `json:"photo_url"`
 }
 
-type TelegramUserClaims struct {
-	Id        int             `json:"id"`
+type UserClaims struct {
+	Id        uuid.UUID       `json:"id"`
 	FirstName string          `json:"firstName"`
 	Username  string          `json:"username,omitempty"`
 	Exp       jwt.NumericDate `json:"exp"`

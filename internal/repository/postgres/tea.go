@@ -80,7 +80,7 @@ func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (strin
 	}
 
 	if filters.Name != "" {
-		nameStmt := "name like :name"
+		nameStmt := "lower(teas.name) like lower(:name)"
 		filters.Name = fmt.Sprintf("%%%s%%", filters.Name)
 		filterStatements = append(filterStatements, nameStmt)
 	}

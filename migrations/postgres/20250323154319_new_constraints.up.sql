@@ -8,5 +8,7 @@ alter table evaluations
     add constraint evaluations_rating_check  check ( rating > 0 and rating <= 10);
 
 alter table users
-add column name varchar(255),
-add column lastname varchar(255);
+add column first_name varchar(255),
+add column last_name varchar(255),
+drop column phone,
+alter column telegram_id type bigint using telegram_id::bigint;

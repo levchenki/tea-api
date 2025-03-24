@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"net/http"
@@ -17,32 +19,69 @@ import (
 	"time"
 )
 
-type AuthController struct {
-	jwtSecret string
-	botToken  string
+type UserService interface {
+	Create(user *entity.User) error
+	Exists(telegramId uint64) (bool, error)
+	GetByTelegramId(telegramId uint64) (*entity.User, error)
 }
 
-func NewAuthController(jwtSecret, botToken string) *AuthController {
-	return &AuthController{jwtSecret, botToken}
+type AuthController struct {
+	jwtSecret   string
+	botToken    string
+	userService UserService
+}
+
+func NewAuthController(jwtSecret, botToken string, userService UserService) *AuthController {
+	return &AuthController{jwtSecret, botToken, userService}
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	var user schemas.TelegramUser
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	var telegramUser schemas.TelegramUser
+	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {
 		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
 	}
 
-	if err := c.verifyTelegramAuth(user); err != nil {
+	if err := c.verifyTelegramAuth(telegramUser); err != nil {
 		errResponse := errx.ErrorForbidden(fmt.Errorf("telegram verification error: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
 		return
 	}
 
-	token, err := c.generateJWT(user, c.jwtSecret)
+	//todo rewrite start
+	exists, err := c.userService.Exists(telegramUser.Id)
+	if err != nil {
+		errResponse := errx.ErrorInternalServer(fmt.Errorf("user exists check error: %w", err))
+		render.Status(r, errResponse.HTTPStatusCode)
+		render.JSON(w, r, errResponse)
+		return
+	}
+
+	if !exists {
+		emptyUser := entity.NewEmptyUser(telegramUser.Id, telegramUser.FirstName, telegramUser.LastName, telegramUser.Username)
+		err := c.userService.Create(emptyUser)
+		if err != nil {
+			errResponse := errx.ErrorInternalServer(fmt.Errorf("user creation error: %w", err))
+			render.Status(r, errResponse.HTTPStatusCode)
+			render.JSON(w, r, errResponse)
+			return
+		}
+	}
+
+	u, err := c.userService.GetByTelegramId(telegramUser.Id)
+
+	if err != nil {
+		errResponse := errx.ErrorInternalServer(fmt.Errorf("user getting error: %w", err))
+		render.Status(r, errResponse.HTTPStatusCode)
+		render.JSON(w, r, errResponse)
+		return
+	}
+
+	//todo rewrite end
+	token, err := c.generateJWT(u, c.jwtSecret)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
 		render.Status(r, errResponse.HTTPStatusCode)
@@ -92,10 +131,10 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	return nil
 }
 
-func (c *AuthController) generateJWT(user schemas.TelegramUser, jwtSecret string) (string, error) {
+func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
 	expDate := time.Now().Add(time.Hour * 1).Unix()
 	claims := jwt.MapClaims{
-		"id":        user.Id,
+		"id":        user.Id.String(),
 		"firstName": user.FirstName,
 		"username":  user.Username,
 		"exp":       expDate,
@@ -163,30 +202,30 @@ func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, 
 	return token, nil
 }
 
-func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.TelegramUserClaims, error) {
+// todo rewrite int to uuid
+func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
 	}
 
-	var tgClaims schemas.TelegramUserClaims
+	//todo new name
+	userClaims := schemas.UserClaims{}
 
 	if exp, err := claims.GetExpirationTime(); err != nil || exp == nil {
 		return nil, fmt.Errorf("exp can not be null")
 	} else {
-		tgClaims.Exp = *exp
+		userClaims.Exp = *exp
 	}
 
 	if id, ok := claims["id"]; !ok {
 		return nil, fmt.Errorf("invalid claims: id can not be null")
 	} else {
-		idInt, ok := id.(float64)
-		if ok {
-			tgClaims.Id = int(idInt)
-		} else {
+		idUUID, err := uuid.Parse(id.(string))
+		if err != nil {
 			return nil, fmt.Errorf("invalid claims: invalid id")
 		}
-
+		userClaims.Id = idUUID
 	}
 
 	if firstName, ok := claims["firstName"]; !ok {
@@ -194,7 +233,7 @@ func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.TelegramUserCla
 	} else {
 		firstNameString, ok := firstName.(string)
 		if ok {
-			tgClaims.FirstName = firstNameString
+			userClaims.FirstName = firstNameString
 		} else {
 			return nil, fmt.Errorf("invalid claims: invalid firstName")
 		}
@@ -205,11 +244,11 @@ func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.TelegramUserCla
 	} else {
 		usernameString, ok := username.(string)
 		if ok {
-			tgClaims.Username = usernameString
+			userClaims.Username = usernameString
 		} else {
 			return nil, fmt.Errorf("invalid claims: invalid username")
 		}
 	}
 
-	return &tgClaims, nil
+	return &userClaims, nil
 }
