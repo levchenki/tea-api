@@ -100,6 +100,12 @@ func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
 
 	tea, err := c.teaService.CreateTea(teaRequest)
 	if err != nil {
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, errorResponse.HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
@@ -155,6 +161,12 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 
 	tea, err := c.teaService.UpdateTea(id, teaRequest)
 	if err != nil {
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, errorResponse.HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)

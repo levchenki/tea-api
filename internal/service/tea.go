@@ -68,6 +68,14 @@ func (s *Service) GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]e
 }
 
 func (s *Service) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
+	exists, err := s.teaRepository.ExistsByName(uuid.Nil, t.Name)
+	if err != nil {
+		return nil, err
+	}
+	if exists == true {
+		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s already is exist", t.Name))
+	}
+
 	createdTea, err := s.teaRepository.Create(t)
 	if err != nil {
 		return nil, err

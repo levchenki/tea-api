@@ -400,3 +400,12 @@ func (r *TeaRepository) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *tea
 	}
 	return nil
 }
+
+func (r *TeaRepository) ExistsByCategoryId(categoryId uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.Get(&exists, "select exists(select 1 from teas where category_id = $1)", categoryId)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

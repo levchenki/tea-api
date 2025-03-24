@@ -28,11 +28,14 @@ func Run() {
 	teaRepository := postgres.NewTeaRepository(db)
 	tagRepository := postgres.NewTagRepository(db)
 	userRepository := postgres.NewUserRepository(db)
+	categoryRepository := postgres.NewCategoryRepository(db)
 
 	teaService := service.NewTeaService(teaRepository, tagRepository)
 	userService := service.NewUserService(userRepository)
+	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
 
 	teaController := controller.NewTeaController(teaService)
+	categoryController := controller.NewCategoryController(categoryService)
 
 	authController := controller.NewAuthController(
 		cfg.JWTSecretKey,
@@ -63,6 +66,18 @@ func Run() {
 		r.Put("/{id}", teaController.UpdateTea)
 
 		r.Post("/{id}/evaluate", teaController.Evaluate)
+	})
+
+	r.Route("/categories", func(r chi.Router) {
+		r.Get("/{id}", categoryController.GetCategoryById)
+		r.Get("/", categoryController.GetAllCategories)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware)
+			r.Post("/", categoryController.CreateCategory)
+			r.Delete("/{id}", categoryController.DeleteCategory)
+			r.Put("/{id}", categoryController.UpdateCategory)
+		})
 	})
 
 	http.ListenAndServe(fmt.Sprintf(":%s", cfg.Server.Port), r)
