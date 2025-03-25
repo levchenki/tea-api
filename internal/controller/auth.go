@@ -51,7 +51,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo rewrite start
 	exists, err := c.userService.Exists(telegramUser.Id)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(fmt.Errorf("user exists check error: %w", err))
@@ -80,7 +79,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo rewrite end
 	token, err := c.generateJWT(u, c.jwtSecret)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
@@ -202,14 +200,12 @@ func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, 
 	return token, nil
 }
 
-// todo rewrite int to uuid
 func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
 	}
 
-	//todo new name
 	userClaims := schemas.UserClaims{}
 
 	if exp, err := claims.GetExpirationTime(); err != nil || exp == nil {

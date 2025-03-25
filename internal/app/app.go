@@ -58,14 +58,16 @@ func Run() {
 
 	r.Post("/auth", authController.Auth)
 
-	r.With(authController.AuthMiddleware).Route("/teas", func(r chi.Router) {
-		r.Get("/{id}", teaController.GetTeaById)
-		r.Get("/", teaController.GetAllTeas)
-		r.Post("/", teaController.CreateTea)
-		r.Delete("/{id}", teaController.DeleteTea)
-		r.Put("/{id}", teaController.UpdateTea)
-
-		r.Post("/{id}/evaluate", teaController.Evaluate)
+	r.Route("/teas", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware)
+			r.Get("/", teaController.GetAllTeas)
+			r.Get("/{id}", teaController.GetTeaById)
+			r.Post("/", teaController.CreateTea)
+			r.Delete("/{id}", teaController.DeleteTea)
+			r.Put("/{id}", teaController.UpdateTea)
+			r.Post("/{id}/evaluate", teaController.Evaluate)
+		})
 	})
 
 	r.Route("/categories", func(r chi.Router) {

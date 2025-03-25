@@ -18,6 +18,7 @@ type Filters struct {
 	MaxPrice   float64      `json:"maxPrice,omitempty" db:"max_price"`
 	SortBy     SortByFilter `json:"sortBy,omitempty"`
 	IsAsc      bool         `json:"isAsc"`
+	IsDeleted  bool         `json:"isDeleted,omitempty" db:"is_deleted"`
 	UserId     uuid.UUID    `json:"userId" db:"user_id"`
 }
 
@@ -121,5 +122,12 @@ func (tf *Filters) Validate(r *http.Request) error {
 		tf.MinPrice = prices[0]
 		tf.MaxPrice = prices[1]
 	}
+
+	isDeleted, err := strconv.ParseBool(query.Get("isDeleted"))
+	if err != nil {
+		isDeleted = false
+	}
+	tf.IsDeleted = isDeleted
+
 	return nil
 }

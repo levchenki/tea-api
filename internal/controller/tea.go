@@ -15,7 +15,7 @@ import (
 
 type TeaService interface {
 	GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
-	GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]entity.TeaWithRating, error)
+	GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
@@ -72,9 +72,13 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.UserClaims)
+	value := r.Context().Value("user")
+	userClaims, ok := value.(*schemas.UserClaims)
+	if ok {
+		filters.UserId = userClaims.Id
+	}
 
-	teas, err := c.teaService.GetAllTeas(filters, userClaims.Id)
+	teas, err := c.teaService.GetAllTeas(filters)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)

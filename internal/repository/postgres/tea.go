@@ -97,6 +97,11 @@ func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (strin
 		filterStatements = append(filterStatements, priceStmt)
 	}
 
+	if !filters.IsDeleted {
+		isDeletedStmt := "teas.is_deleted is false"
+		filterStatements = append(filterStatements, isDeletedStmt)
+	}
+
 	if len(filterStatements) > 0 {
 		query += fmt.Sprintf(" where %s", strings.Join(filterStatements, " and "))
 	}
@@ -291,6 +296,7 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 		Price:       inputTea.Price,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
+		IsDeleted:   inputTea.IsDeleted,
 	}
 
 	rows, err := tx.NamedQuery(`
@@ -299,7 +305,8 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 			price=:price,
 			description=:description,
 			updated_at=now(),
-			category_id=:category_id
+			category_id=:category_id,
+			is_deleted=:is_deleted
 			where id = :id
 		returning teas.*
 		`, tea)

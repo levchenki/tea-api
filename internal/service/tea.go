@@ -57,8 +57,7 @@ func (s *Service) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRat
 	return teaById, nil
 }
 
-func (s *Service) GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]entity.TeaWithRating, error) {
-	filters.UserId = userId
+func (s *Service) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
 	allTeas, err := s.teaRepository.GetAll(filters)
 	if err != nil {
 		return nil, err
