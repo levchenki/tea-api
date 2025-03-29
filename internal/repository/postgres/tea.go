@@ -22,7 +22,27 @@ func NewTeaRepository(db *sqlx.DB) *TeaRepository {
 	}
 }
 
-func (r *TeaRepository) GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
+func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
+	tea := entity.TeaWithRating{}
+	query := `
+		select
+			teas.*,
+			coalesce((select avg(rating) from evaluations where tea_id = teas.id), 0) as average_rating
+		from teas
+	 		left join evaluations on teas.id = evaluations.tea_id
+		where teas.id = $1 
+		limit 1`
+	err := r.db.Get(&tea, query, id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &tea, nil
+}
+func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
 		select

@@ -9,7 +9,8 @@ import (
 )
 
 type TeaRepository interface {
-	GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
+	GetById(id uuid.UUID) (*entity.TeaWithRating, error)
+	GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
 	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
 	Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Delete(id uuid.UUID) error
@@ -23,7 +24,7 @@ type TagRepository interface {
 	GetByTeaId(teaId uuid.UUID) ([]entity.Tag, error)
 }
 
-type Service struct {
+type TeaService struct {
 	teaRepository TeaRepository
 	tagRepository TagRepository
 }
@@ -31,15 +32,21 @@ type Service struct {
 func NewTeaService(
 	teaRepository TeaRepository,
 	tagRepository TagRepository,
-) *Service {
-	return &Service{
+) *TeaService {
+	return &TeaService{
 		teaRepository: teaRepository,
 		tagRepository: tagRepository,
 	}
 }
 
-func (s *Service) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
-	teaById, err := s.teaRepository.GetById(id, userId)
+func (s *TeaService) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
+	var teaById *entity.TeaWithRating
+	var err error
+	if userId == uuid.Nil {
+		teaById, err = s.teaRepository.GetById(id)
+	} else {
+		teaById, err = s.teaRepository.GetByIdWithUser(id, userId)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +64,7 @@ func (s *Service) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRat
 	return teaById, nil
 }
 
-func (s *Service) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
+func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
 	allTeas, err := s.teaRepository.GetAll(filters)
 	if err != nil {
 		return nil, err
@@ -66,7 +73,7 @@ func (s *Service) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRatin
 	return allTeas, err
 }
 
-func (s *Service) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
+func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
 	exists, err := s.teaRepository.ExistsByName(uuid.Nil, t.Name)
 	if err != nil {
 		return nil, err
@@ -89,7 +96,7 @@ func (s *Service) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
 	return createdTea, nil
 }
 
-func (s *Service) DeleteTea(id uuid.UUID) error {
+func (s *TeaService) DeleteTea(id uuid.UUID) error {
 	exists, err := s.teaRepository.Exists(id)
 	if err != nil {
 		return err
@@ -104,7 +111,7 @@ func (s *Service) DeleteTea(id uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entity.Tea, error) {
+func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entity.Tea, error) {
 	exists, err := s.teaRepository.Exists(id)
 	if err != nil {
 		return nil, err
@@ -143,7 +150,7 @@ func (s *Service) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entity.T
 	return updatedTea, nil
 }
 
-func (s *Service) getTagsDelta(existedTagIds, incomingTagIds []uuid.UUID) ([]uuid.UUID, []uuid.UUID) {
+func (s *TeaService) getTagsDelta(existedTagIds, incomingTagIds []uuid.UUID) ([]uuid.UUID, []uuid.UUID) {
 	existedTagsMap := make(map[uuid.UUID]uuid.UUID, len(existedTagIds))
 	for _, tagId := range existedTagIds {
 		existedTagsMap[tagId] = tagId
@@ -171,7 +178,7 @@ func (s *Service) getTagsDelta(existedTagIds, incomingTagIds []uuid.UUID) ([]uui
 	return tagIdsToInsert, tagIdsToDelete
 }
 
-func (s *Service) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error) {
+func (s *TeaService) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error) {
 	exists, err := s.teaRepository.Exists(id)
 	if err != nil {
 		return nil, err
@@ -185,7 +192,7 @@ func (s *Service) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchema
 		return nil, err
 	}
 
-	evaluatedTea, err := s.teaRepository.GetById(id, userId)
+	evaluatedTea, err := s.teaRepository.GetByIdWithUser(id, userId)
 	if err != nil {
 		return nil, err
 	}

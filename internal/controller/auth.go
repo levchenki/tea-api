@@ -141,42 +141,49 @@ func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (strin
 	return token.SignedString([]byte(jwtSecret))
 }
 
-func (c *AuthController) AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer") {
-			errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
-			return
-		}
+func (c *AuthController) AuthMiddleware(required bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if !required && authHeader == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		token, err := c.parseToken(tokenString, c.jwtSecret)
+			if !strings.HasPrefix(authHeader, "Bearer") {
+				errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
 
-		if err != nil {
-			errResponse := errx.ErrorUnauthorized(err)
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
-			return
-		}
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			token, err := c.parseToken(tokenString, c.jwtSecret)
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			fmt.Println(claims)
-		}
+			if err != nil {
+				errResponse := errx.ErrorUnauthorized(err)
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
 
-		claims, err := c.parseClaims(token)
+			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+				fmt.Println(claims)
+			}
 
-		if err != nil {
-			errResponse := errx.ErrorUnauthorized(err)
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
-			return
-		}
+			claims, err := c.parseClaims(token)
 
-		ctx := context.WithValue(r.Context(), "user", claims)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+			if err != nil {
+				errResponse := errx.ErrorUnauthorized(err)
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), "user", claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
