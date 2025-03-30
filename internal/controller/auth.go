@@ -131,10 +131,17 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 
 func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
 	expDate := time.Now().Add(time.Hour * 1).Unix()
+	var role string
+	if user.IsAdmin {
+		role = "admin"
+	} else {
+		role = "user"
+	}
 	claims := jwt.MapClaims{
 		"id":        user.Id.String(),
 		"firstName": user.FirstName,
 		"username":  user.Username,
+		"role":      role,
 		"exp":       expDate,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -167,10 +174,6 @@ func (c *AuthController) AuthMiddleware(required bool) func(http.Handler) http.H
 				return
 			}
 
-			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-				fmt.Println(claims)
-			}
-
 			claims, err := c.parseClaims(token)
 
 			if err != nil {
@@ -184,6 +187,21 @@ func (c *AuthController) AuthMiddleware(required bool) func(http.Handler) http.H
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func (c *AuthController) AdminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userClaims := r.Context().Value("user").(*schemas.UserClaims)
+
+		if userClaims.Role == "admin" {
+			next.ServeHTTP(w, r)
+		} else {
+			errResponse := errx.ErrorForbidden(fmt.Errorf("user does not have admin permissions"))
+			render.Status(r, errResponse.HTTPStatusCode)
+			render.JSON(w, r, errResponse)
+			return
+		}
+	})
 }
 
 func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
@@ -250,6 +268,17 @@ func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, err
 			userClaims.Username = usernameString
 		} else {
 			return nil, fmt.Errorf("invalid claims: invalid username")
+		}
+	}
+
+	if role, ok := claims["role"]; !ok {
+		return nil, fmt.Errorf("invalid claims: role can not be null")
+	} else {
+		roleString, ok := role.(string)
+		if ok {
+			userClaims.Role = roleString
+		} else {
+			return nil, fmt.Errorf("invalid claims: invalid role")
 		}
 	}
 

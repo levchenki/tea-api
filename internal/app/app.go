@@ -68,10 +68,14 @@ func Run() {
 
 		r.Group(func(r chi.Router) {
 			r.Use(authController.AuthMiddleware(true))
-			r.Post("/", teaController.CreateTea)
-			r.Delete("/{id}", teaController.DeleteTea)
-			r.Put("/{id}", teaController.UpdateTea)
 			r.Post("/{id}/evaluate", teaController.Evaluate)
+
+			r.Group(func(r chi.Router) {
+				r.Use(authController.AdminMiddleware)
+				r.Post("/", teaController.CreateTea)
+				r.Delete("/{id}", teaController.DeleteTea)
+				r.Put("/{id}", teaController.UpdateTea)
+			})
 		})
 	})
 
@@ -81,6 +85,7 @@ func Run() {
 
 		r.Group(func(r chi.Router) {
 			r.Use(authController.AuthMiddleware(true))
+			r.Use(authController.AdminMiddleware)
 			r.Post("/", categoryController.CreateCategory)
 			r.Delete("/{id}", categoryController.DeleteCategory)
 			r.Put("/{id}", categoryController.UpdateCategory)

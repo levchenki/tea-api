@@ -10,5 +10,6 @@ alter table evaluations
 alter table users
 add column first_name varchar(255),
 add column last_name varchar(255),
+add column is_admin bool default false,
 drop column phone,
 alter column telegram_id type bigint using telegram_id::bigint;
