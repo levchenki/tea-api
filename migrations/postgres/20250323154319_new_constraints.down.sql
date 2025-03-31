@@ -14,4 +14,3 @@ alter table users
     drop column is_admin,
     add column phone varchar(255),
     alter column telegram_id type int using telegram_id::int;
-

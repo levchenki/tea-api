@@ -1,5 +1,3 @@
-begin;
-
 create table if not exists categories
 (
     id          uuid default gen_random_uuid() primary key,
@@ -53,5 +51,3 @@ create table if not exists evaluations
     tea_id     uuid references teas (id),
     user_id    uuid references users (id)
 );
-
-commit;
