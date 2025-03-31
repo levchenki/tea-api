@@ -79,7 +79,7 @@ func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) 
 		return nil, err
 	}
 	if exists == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s already is exist", t.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
 	}
 
 	createdTea, err := s.teaRepository.Create(t)
@@ -125,7 +125,7 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 		return nil, err
 	}
 	if existsByName == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s already is exist", t.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)

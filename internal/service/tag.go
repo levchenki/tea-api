@@ -41,7 +41,7 @@ func (s *TagService) Create(tag *entity.Tag) (*entity.Tag, error) {
 		return nil, err
 	}
 	if exists {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s already is exist", tag.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s has already existed", tag.Name))
 	}
 
 	createdTag, err := s.tagRepository.Create(tag)
@@ -66,7 +66,7 @@ func (s *TagService) Update(id uuid.UUID, tag *entity.Tag) (*entity.Tag, error) 
 		return nil, err
 	}
 	if existsByName {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s already is exist", tag.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s has already existed", tag.Name))
 	}
 
 	tag.Id = id

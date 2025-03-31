@@ -39,7 +39,7 @@ func Run() {
 	categoryController := controller.NewCategoryController(categoryService)
 	tagController := controller.NewTagController(tagService)
 
-	authController := controller.NewAuthController(
+	authController := controller.NewUserController(
 		cfg.JWTSecretKey,
 		cfg.BotToken,
 		userService,

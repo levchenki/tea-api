@@ -31,7 +31,7 @@ type UserController struct {
 	userService UserService
 }
 
-func NewAuthController(jwtSecret, botToken string, userService UserService) *UserController {
+func NewUserController(jwtSecret, botToken string, userService UserService) *UserController {
 	return &UserController{jwtSecret, botToken, userService}
 }
 

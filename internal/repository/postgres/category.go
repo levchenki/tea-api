@@ -129,7 +129,7 @@ func (r *CategoryRepository) Delete(id uuid.UUID) error {
 		return err
 	}
 
-	_, err = tx.Exec("delete from categories where id = $1", id.String())
+	_, err = tx.Exec("delete from categories where id = $1", id)
 	if err != nil {
 		errRollback := tx.Rollback()
 		if errRollback != nil {

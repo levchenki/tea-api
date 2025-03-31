@@ -120,7 +120,7 @@ func (r *TagRepository) Delete(id uuid.UUID) error {
 		return err
 	}
 
-	_, err = tx.Exec(`delete from tags where id = $1`, id.String())
+	_, err = tx.Exec(`delete from tags where id = $1`, id)
 	if err != nil {
 
 	}
@@ -143,7 +143,7 @@ func (r *TagRepository) Delete(id uuid.UUID) error {
 
 func (r *TagRepository) Exists(id uuid.UUID) (bool, error) {
 	var exists bool
-	err := r.db.Get(&exists, "select exists(select 1 from tags where id = $1)", id.String())
+	err := r.db.Get(&exists, "select exists(select 1 from tags where id = $1)", id)
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +153,7 @@ func (r *TagRepository) Exists(id uuid.UUID) (bool, error) {
 func (r *TagRepository) ExistsByName(existedId uuid.UUID, name string) (bool, error) {
 	var exists bool
 	err := r.db.Get(&exists, "select exists(select 1 from tags where id != $1 and name = $2 )",
-		existedId.String(), name)
+		existedId, name)
 	if err != nil {
 		return false, err
 	}
@@ -162,7 +162,7 @@ func (r *TagRepository) ExistsByName(existedId uuid.UUID, name string) (bool, er
 
 func (r *TagRepository) ExistsByTeas(id uuid.UUID) (bool, error) {
 	var exists bool
-	err := r.db.Get(&exists, "select exists(select 1 from teas_tags where teas_tags.tag_id = $1)", id.String())
+	err := r.db.Get(&exists, "select exists(select 1 from teas_tags where teas_tags.tag_id = $1)", id)
 	if err != nil {
 		return false, err
 	}

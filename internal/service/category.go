@@ -61,7 +61,7 @@ func (s *CategoryService) Create(category *entity.Category) (*entity.Category, e
 		return nil, err
 	}
 	if exists == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("category with name %s already is exist", category.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("category with name %s has already existed", category.Name))
 	}
 	createdCategory, err := s.categoryRepository.Create(category)
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *CategoryService) Update(id uuid.UUID, category *entity.Category) (*enti
 		return nil, err
 	}
 	if existsByName == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("category with name %s already is exist", category.Name))
+		return nil, errx.ErrorBadRequest(fmt.Errorf("category with name %s has already existed", category.Name))
 	}
 
 	category.Id = id
