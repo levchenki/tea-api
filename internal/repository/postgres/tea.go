@@ -22,7 +22,27 @@ func NewTeaRepository(db *sqlx.DB) *TeaRepository {
 	}
 }
 
-func (r *TeaRepository) GetById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
+func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
+	tea := entity.TeaWithRating{}
+	query := `
+		select
+			teas.*,
+			coalesce((select avg(rating) from evaluations where tea_id = teas.id), 0) as average_rating
+		from teas
+	 		left join evaluations on teas.id = evaluations.tea_id
+		where teas.id = $1 
+		limit 1`
+	err := r.db.Get(&tea, query, id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &tea, nil
+}
+func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
 		select
@@ -95,6 +115,11 @@ func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (strin
 	if filters.MinPrice != 0 && filters.MaxPrice != 0 {
 		priceStmt := "price between :min_price and :max_price"
 		filterStatements = append(filterStatements, priceStmt)
+	}
+
+	if !filters.IsDeleted {
+		isDeletedStmt := "teas.is_deleted is false"
+		filterStatements = append(filterStatements, isDeletedStmt)
 	}
 
 	if len(filterStatements) > 0 {
@@ -291,6 +316,7 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 		Price:       inputTea.Price,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
+		IsDeleted:   inputTea.IsDeleted,
 	}
 
 	rows, err := tx.NamedQuery(`
@@ -299,7 +325,8 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 			price=:price,
 			description=:description,
 			updated_at=now(),
-			category_id=:category_id
+			category_id=:category_id,
+			is_deleted=:is_deleted
 			where id = :id
 		returning teas.*
 		`, tea)
@@ -399,4 +426,13 @@ func (r *TeaRepository) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *tea
 		return err
 	}
 	return nil
+}
+
+func (r *TeaRepository) ExistsByCategoryId(categoryId uuid.UUID) (bool, error) {
+	var exists bool
+	err := r.db.Get(&exists, "select exists(select 1 from teas where category_id = $1)", categoryId)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

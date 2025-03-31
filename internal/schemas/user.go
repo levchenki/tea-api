@@ -19,5 +19,6 @@ type UserClaims struct {
 	Id        uuid.UUID       `json:"id"`
 	FirstName string          `json:"firstName"`
 	Username  string          `json:"username,omitempty"`
+	Role      string          `json:"role"`
 	Exp       jwt.NumericDate `json:"exp"`
 }

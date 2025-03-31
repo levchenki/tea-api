@@ -28,13 +28,18 @@ func Run() {
 	teaRepository := postgres.NewTeaRepository(db)
 	tagRepository := postgres.NewTagRepository(db)
 	userRepository := postgres.NewUserRepository(db)
+	categoryRepository := postgres.NewCategoryRepository(db)
 
 	teaService := service.NewTeaService(teaRepository, tagRepository)
 	userService := service.NewUserService(userRepository)
+	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
+	tagService := service.NewTagService(tagRepository)
 
 	teaController := controller.NewTeaController(teaService)
+	categoryController := controller.NewCategoryController(categoryService)
+	tagController := controller.NewTagController(tagService)
 
-	authController := controller.NewAuthController(
+	authController := controller.NewUserController(
 		cfg.JWTSecretKey,
 		cfg.BotToken,
 		userService,
@@ -55,14 +60,50 @@ func Run() {
 
 	r.Post("/auth", authController.Auth)
 
-	r.With(authController.AuthMiddleware).Route("/teas", func(r chi.Router) {
-		r.Get("/{id}", teaController.GetTeaById)
-		r.Get("/", teaController.GetAllTeas)
-		r.Post("/", teaController.CreateTea)
-		r.Delete("/{id}", teaController.DeleteTea)
-		r.Put("/{id}", teaController.UpdateTea)
+	r.Route("/teas", func(r chi.Router) {
 
-		r.Post("/{id}/evaluate", teaController.Evaluate)
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware(false))
+			r.Get("/", teaController.GetAllTeas)
+			r.Get("/{id}", teaController.GetTeaById)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware(true))
+			r.Post("/{id}/evaluate", teaController.Evaluate)
+
+			r.Group(func(r chi.Router) {
+				r.Use(authController.AdminMiddleware)
+				r.Post("/", teaController.CreateTea)
+				r.Delete("/{id}", teaController.DeleteTea)
+				r.Put("/{id}", teaController.UpdateTea)
+			})
+		})
+	})
+
+	r.Route("/categories", func(r chi.Router) {
+		r.Get("/{id}", categoryController.GetCategoryById)
+		r.Get("/", categoryController.GetAllCategories)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware(true))
+			r.Use(authController.AdminMiddleware)
+			r.Post("/", categoryController.CreateCategory)
+			r.Delete("/{id}", categoryController.DeleteCategory)
+			r.Put("/{id}", categoryController.UpdateCategory)
+		})
+	})
+
+	r.Route("/tags", func(r chi.Router) {
+		r.Get("/", tagController.GetAllTags)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware(true))
+			r.Use(authController.AdminMiddleware)
+			r.Post("/", tagController.CreateTag)
+			r.Delete("/{id}", tagController.DeleteTag)
+			r.Put("/{id}", tagController.UpdateTag)
+		})
 	})
 
 	http.ListenAndServe(fmt.Sprintf(":%s", cfg.Server.Port), r)

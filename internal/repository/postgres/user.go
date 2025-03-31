@@ -25,13 +25,15 @@ func (r *UserRepository) Create(user *entity.User) error {
 						   created_at,
 						   updated_at,
 						   first_name,
-						   last_name)
+						   last_name,
+		                   is_admin)
 		values (:telegram_id,
 				:username,
 				now(),
 				now(),
 				:first_name,
-				:last_name)
+				:last_name,
+		        :is_admin)
 		`, &user)
 	if err != nil {
 		errRollback := tx.Rollback()
@@ -68,7 +70,8 @@ func (r *UserRepository) GetByTelegramId(telegramId uint64) (*entity.User, error
 		coalesce(u.last_name, '') as last_name,
 		coalesce(u.username, '') as username,
 		u.created_at,
-		u.updated_at
+		u.updated_at,
+		u.is_admin
 	from users u where telegram_id = $1 limit 1`, &telegramId)
 	if err != nil {
 		return nil, err

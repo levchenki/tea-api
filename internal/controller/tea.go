@@ -15,7 +15,7 @@ import (
 
 type TeaService interface {
 	GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
-	GetAllTeas(filters *teaSchemas.Filters, userId uuid.UUID) ([]entity.TeaWithRating, error)
+	GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
@@ -40,8 +40,16 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.UserClaims)
-	teaById, err := c.teaService.GetTeaById(id, userClaims.Id)
+	user := r.Context().Value("user")
+	userClaims, ok := user.(*schemas.UserClaims)
+	var userId uuid.UUID
+	if ok {
+		userId = userClaims.Id
+	} else {
+		userId = uuid.Nil
+	}
+
+	teaById, err := c.teaService.GetTeaById(id, userId)
 
 	if err != nil {
 		var errorResponse *errx.ErrorResponse
@@ -60,6 +68,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusOK)
 	response := teaSchemas.NewTeaWithRatingResponseModel(teaById)
 	render.JSON(w, r, response)
+	return
 }
 
 func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
@@ -69,12 +78,15 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		errorResponse := errx.ErrorBadRequest(err)
 		render.Status(r, errorResponse.HTTPStatusCode)
 		render.JSON(w, r, errorResponse)
-		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.UserClaims)
+	user := r.Context().Value("user")
+	userClaims, ok := user.(*schemas.UserClaims)
+	if ok {
+		filters.UserId = userClaims.Id
+	}
 
-	teas, err := c.teaService.GetAllTeas(filters, userClaims.Id)
+	teas, err := c.teaService.GetAllTeas(filters)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
@@ -100,6 +112,12 @@ func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
 
 	tea, err := c.teaService.CreateTea(teaRequest)
 	if err != nil {
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, errorResponse.HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)
@@ -155,6 +173,12 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 
 	tea, err := c.teaService.UpdateTea(id, teaRequest)
 	if err != nil {
+		var errorResponse *errx.ErrorResponse
+		if errors.As(err, &errorResponse) {
+			render.Status(r, errorResponse.HTTPStatusCode)
+			render.JSON(w, r, err)
+			return
+		}
 		errResponse := errx.ErrorInternalServer(err)
 		render.Status(r, errResponse.HTTPStatusCode)
 		render.JSON(w, r, errResponse)

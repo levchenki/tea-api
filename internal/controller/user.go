@@ -25,17 +25,17 @@ type UserService interface {
 	GetByTelegramId(telegramId uint64) (*entity.User, error)
 }
 
-type AuthController struct {
+type UserController struct {
 	jwtSecret   string
 	botToken    string
 	userService UserService
 }
 
-func NewAuthController(jwtSecret, botToken string, userService UserService) *AuthController {
-	return &AuthController{jwtSecret, botToken, userService}
+func NewUserController(jwtSecret, botToken string, userService UserService) *UserController {
+	return &UserController{jwtSecret, botToken, userService}
 }
 
-func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
+func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	var telegramUser schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {
 		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
@@ -51,7 +51,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo rewrite start
 	exists, err := c.userService.Exists(telegramUser.Id)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(fmt.Errorf("user exists check error: %w", err))
@@ -80,7 +79,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo rewrite end
 	token, err := c.generateJWT(u, c.jwtSecret)
 	if err != nil {
 		errResponse := errx.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
@@ -94,7 +92,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
+func (c *UserController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	if c.botToken == "" {
 		return fmt.Errorf("invalid bot token")
 	}
@@ -131,57 +129,82 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	return nil
 }
 
-func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
+func (c *UserController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
 	expDate := time.Now().Add(time.Hour * 1).Unix()
+	var role string
+	if user.IsAdmin {
+		role = "admin"
+	} else {
+		role = "user"
+	}
 	claims := jwt.MapClaims{
 		"id":        user.Id.String(),
 		"firstName": user.FirstName,
 		"username":  user.Username,
+		"role":      role,
 		"exp":       expDate,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(jwtSecret))
 }
 
-func (c *AuthController) AuthMiddleware(next http.Handler) http.Handler {
+func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if !required && authHeader == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if !strings.HasPrefix(authHeader, "Bearer") {
+				errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
+
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			token, err := c.parseToken(tokenString, c.jwtSecret)
+
+			if err != nil {
+				errResponse := errx.ErrorUnauthorized(err)
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
+
+			claims, err := c.parseClaims(token)
+
+			if err != nil {
+				errResponse := errx.ErrorUnauthorized(err)
+				render.Status(r, errResponse.HTTPStatusCode)
+				render.JSON(w, r, errResponse)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), "user", claims)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func (c *UserController) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer") {
-			errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
+		userClaims := r.Context().Value("user").(*schemas.UserClaims)
+
+		if userClaims.Role == "admin" {
+			next.ServeHTTP(w, r)
+		} else {
+			errResponse := errx.ErrorForbidden(fmt.Errorf("user does not have admin permissions"))
 			render.Status(r, errResponse.HTTPStatusCode)
 			render.JSON(w, r, errResponse)
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		token, err := c.parseToken(tokenString, c.jwtSecret)
-
-		if err != nil {
-			errResponse := errx.ErrorUnauthorized(err)
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
-			return
-		}
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			fmt.Println(claims)
-		}
-
-		claims, err := c.parseClaims(token)
-
-		if err != nil {
-			errResponse := errx.ErrorUnauthorized(err)
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), "user", claims)
-		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
+func (c *UserController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 
@@ -202,14 +225,12 @@ func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, 
 	return token, nil
 }
 
-// todo rewrite int to uuid
-func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
+func (c *UserController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
 	}
 
-	//todo new name
 	userClaims := schemas.UserClaims{}
 
 	if exp, err := claims.GetExpirationTime(); err != nil || exp == nil {
@@ -247,6 +268,17 @@ func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, err
 			userClaims.Username = usernameString
 		} else {
 			return nil, fmt.Errorf("invalid claims: invalid username")
+		}
+	}
+
+	if role, ok := claims["role"]; !ok {
+		return nil, fmt.Errorf("invalid claims: role can not be null")
+	} else {
+		roleString, ok := role.(string)
+		if ok {
+			userClaims.Role = roleString
+		} else {
+			return nil, fmt.Errorf("invalid claims: invalid role")
 		}
 	}
 
