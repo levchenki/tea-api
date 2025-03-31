@@ -1,18 +1,19 @@
 package categorySchemas
 
 import (
+	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
 )
 
 type ResponseModel struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	Id          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
 }
 
 func NewResponseModel(category *entity.Category) *ResponseModel {
 	r := &ResponseModel{
-		Id:   category.Id.String(),
+		Id:   category.Id,
 		Name: category.Name,
 	}
 	if category.Description != "" {

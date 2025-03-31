@@ -33,9 +33,11 @@ func Run() {
 	teaService := service.NewTeaService(teaRepository, tagRepository)
 	userService := service.NewUserService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
+	tagService := service.NewTagService(tagRepository)
 
 	teaController := controller.NewTeaController(teaService)
 	categoryController := controller.NewCategoryController(categoryService)
+	tagController := controller.NewTagController(tagService)
 
 	authController := controller.NewAuthController(
 		cfg.JWTSecretKey,
@@ -89,6 +91,18 @@ func Run() {
 			r.Post("/", categoryController.CreateCategory)
 			r.Delete("/{id}", categoryController.DeleteCategory)
 			r.Put("/{id}", categoryController.UpdateCategory)
+		})
+	})
+
+	r.Route("/tags", func(r chi.Router) {
+		r.Get("/", tagController.GetAllTags)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authController.AuthMiddleware(true))
+			r.Use(authController.AdminMiddleware)
+			r.Post("/", tagController.CreateTag)
+			r.Delete("/{id}", tagController.DeleteTag)
+			r.Put("/{id}", tagController.UpdateTag)
 		})
 	})
 

@@ -176,5 +176,6 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	render.Status(r, http.StatusOK)
 	render.JSON(w, r, true)
 }

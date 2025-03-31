@@ -20,18 +20,18 @@ type TeaRepository interface {
 	ExistsByName(existedId uuid.UUID, name string) (bool, error)
 }
 
-type TagRepository interface {
+type TeaTagRepository interface {
 	GetByTeaId(teaId uuid.UUID) ([]entity.Tag, error)
 }
 
 type TeaService struct {
 	teaRepository TeaRepository
-	tagRepository TagRepository
+	tagRepository TeaTagRepository
 }
 
 func NewTeaService(
 	teaRepository TeaRepository,
-	tagRepository TagRepository,
+	tagRepository TeaTagRepository,
 ) *TeaService {
 	return &TeaService{
 		teaRepository: teaRepository,

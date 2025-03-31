@@ -25,17 +25,17 @@ type UserService interface {
 	GetByTelegramId(telegramId uint64) (*entity.User, error)
 }
 
-type AuthController struct {
+type UserController struct {
 	jwtSecret   string
 	botToken    string
 	userService UserService
 }
 
-func NewAuthController(jwtSecret, botToken string, userService UserService) *AuthController {
-	return &AuthController{jwtSecret, botToken, userService}
+func NewAuthController(jwtSecret, botToken string, userService UserService) *UserController {
+	return &UserController{jwtSecret, botToken, userService}
 }
 
-func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
+func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	var telegramUser schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {
 		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
@@ -92,7 +92,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
+func (c *UserController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	if c.botToken == "" {
 		return fmt.Errorf("invalid bot token")
 	}
@@ -129,7 +129,7 @@ func (c *AuthController) verifyTelegramAuth(data schemas.TelegramUser) error {
 	return nil
 }
 
-func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
+func (c *UserController) generateJWT(user *entity.User, jwtSecret string) (string, error) {
 	expDate := time.Now().Add(time.Hour * 1).Unix()
 	var role string
 	if user.IsAdmin {
@@ -148,7 +148,7 @@ func (c *AuthController) generateJWT(user *entity.User, jwtSecret string) (strin
 	return token.SignedString([]byte(jwtSecret))
 }
 
-func (c *AuthController) AuthMiddleware(required bool) func(http.Handler) http.Handler {
+func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -189,7 +189,7 @@ func (c *AuthController) AuthMiddleware(required bool) func(http.Handler) http.H
 	}
 }
 
-func (c *AuthController) AdminMiddleware(next http.Handler) http.Handler {
+func (c *UserController) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userClaims := r.Context().Value("user").(*schemas.UserClaims)
 
@@ -204,7 +204,7 @@ func (c *AuthController) AdminMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
+func (c *UserController) parseToken(tokenString, jwtSecret string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 
@@ -225,7 +225,7 @@ func (c *AuthController) parseToken(tokenString, jwtSecret string) (*jwt.Token, 
 	return token, nil
 }
 
-func (c *AuthController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
+func (c *UserController) parseClaims(token *jwt.Token) (*schemas.UserClaims, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims")
