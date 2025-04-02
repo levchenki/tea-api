@@ -38,24 +38,21 @@ func NewUserController(jwtSecret, botToken string, userService UserService) *Use
 func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	var telegramUser schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid data format: %w", err))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid data format: %w", err))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	if err := c.verifyTelegramAuth(telegramUser); err != nil {
-		errResponse := errx.ErrorForbidden(fmt.Errorf("telegram verification error: %w", err))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewForbiddenError(fmt.Errorf("telegram verification error: %w", err))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	exists, err := c.userService.Exists(telegramUser.Id)
 	if err != nil {
-		errResponse := errx.ErrorInternalServer(fmt.Errorf("user exists check error: %w", err))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewInternalServerError(fmt.Errorf("user exists check error: %w", err))
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -63,9 +60,8 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 		emptyUser := entity.NewEmptyUser(telegramUser.Id, telegramUser.FirstName, telegramUser.LastName, telegramUser.Username)
 		err := c.userService.Create(emptyUser)
 		if err != nil {
-			errResponse := errx.ErrorInternalServer(fmt.Errorf("user creation error: %w", err))
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
+			errResponse := errx.NewInternalServerError(fmt.Errorf("user creation error: %w", err))
+			handleError(w, r, errResponse)
 			return
 		}
 	}
@@ -73,17 +69,15 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	u, err := c.userService.GetByTelegramId(telegramUser.Id)
 
 	if err != nil {
-		errResponse := errx.ErrorInternalServer(fmt.Errorf("user getting error: %w", err))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewInternalServerError(fmt.Errorf("user getting error: %w", err))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	token, err := c.generateJWT(u, c.jwtSecret)
 	if err != nil {
-		errResponse := errx.ErrorInternalServer(fmt.Errorf("token generation error: %w", err))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewInternalServerError(fmt.Errorf("token generation error: %w", err))
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -158,9 +152,8 @@ func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.H
 			}
 
 			if !strings.HasPrefix(authHeader, "Bearer") {
-				errResponse := errx.ErrorUnauthorized(fmt.Errorf("user is not authorized"))
-				render.Status(r, errResponse.HTTPStatusCode)
-				render.JSON(w, r, errResponse)
+				errResponse := errx.NewUnauthorizedError(fmt.Errorf("user is not authorized"))
+				handleError(w, r, errResponse)
 				return
 			}
 
@@ -168,18 +161,16 @@ func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.H
 			token, err := c.parseToken(tokenString, c.jwtSecret)
 
 			if err != nil {
-				errResponse := errx.ErrorUnauthorized(err)
-				render.Status(r, errResponse.HTTPStatusCode)
-				render.JSON(w, r, errResponse)
+				errResponse := errx.NewUnauthorizedError(err)
+				handleError(w, r, errResponse)
 				return
 			}
 
 			claims, err := c.parseClaims(token)
 
 			if err != nil {
-				errResponse := errx.ErrorUnauthorized(err)
-				render.Status(r, errResponse.HTTPStatusCode)
-				render.JSON(w, r, errResponse)
+				errResponse := errx.NewUnauthorizedError(err)
+				handleError(w, r, errResponse)
 				return
 			}
 
@@ -196,9 +187,8 @@ func (c *UserController) AdminMiddleware(next http.Handler) http.Handler {
 		if userClaims.Role == "admin" {
 			next.ServeHTTP(w, r)
 		} else {
-			errResponse := errx.ErrorForbidden(fmt.Errorf("user does not have admin permissions"))
-			render.Status(r, errResponse.HTTPStatusCode)
-			render.JSON(w, r, errResponse)
+			errResponse := errx.NewForbiddenError(fmt.Errorf("user does not have admin permissions"))
+			handleError(w, r, errResponse)
 			return
 		}
 	})

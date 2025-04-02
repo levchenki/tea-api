@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -30,9 +29,7 @@ func NewTagController(tagService TagService) *TagController {
 func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	tags, err := c.tagService.GetAll()
 	if err != nil {
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -48,9 +45,8 @@ func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 	tagRequest := &tagSchemas.RequestModel{}
 	if err := render.Bind(r, tagRequest); err != nil {
-		errResponse := errx.ErrorBadRequest(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(err)
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -61,15 +57,7 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	createdTag, err := c.tagService.Create(tag)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -82,17 +70,15 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(err)
+		handleError(w, r, errResponse)
 		return
 	}
 
 	tagRequest := &tagSchemas.RequestModel{}
 	if err = render.Bind(r, tagRequest); err != nil {
-		errResponse := errx.ErrorBadRequest(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(err)
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -104,16 +90,7 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	updatedTag, err := c.tagService.Update(id, tag)
 
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -126,24 +103,14 @@ func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	err = c.tagService.Delete(id)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 

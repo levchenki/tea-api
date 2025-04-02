@@ -52,7 +52,7 @@ func (s *TeaService) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWith
 	}
 
 	if teaById == nil {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		return nil, errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)
@@ -79,7 +79,7 @@ func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) 
 		return nil, err
 	}
 	if exists == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
+		return nil, errx.NewBadRequestError(fmt.Errorf("tea with name %s has already existed", t.Name))
 	}
 
 	createdTea, err := s.teaRepository.Create(t)
@@ -102,7 +102,7 @@ func (s *TeaService) DeleteTea(id uuid.UUID) error {
 		return err
 	}
 	if exists == false {
-		return errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		return errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
 	}
 	err = s.teaRepository.Delete(id)
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 		return nil, err
 	}
 	if exists == false {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		return nil, errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
 	}
 
 	existsByName, err := s.teaRepository.ExistsByName(id, t.Name)
@@ -125,7 +125,7 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 		return nil, err
 	}
 	if existsByName == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
+		return nil, errx.NewBadRequestError(fmt.Errorf("tea with name %s has already existed", t.Name))
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)
@@ -184,7 +184,7 @@ func (s *TeaService) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSch
 		return nil, err
 	}
 	if exists == false {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		return nil, errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
 	}
 
 	err = s.teaRepository.Evaluate(id, userId, evaluation)

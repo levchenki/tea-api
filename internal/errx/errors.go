@@ -1,60 +1,53 @@
 package errx
 
-import (
-	"net/http"
-)
+import "net/http"
 
-type ErrorResponse struct {
-	Err            error  `json:"-"`
-	HTTPStatusCode int    `json:"-"`
-	ErrorText      string `json:"error,omitempty"`
+type AppError struct {
+	Code    int    `json:"-"`
+	Message string `json:"error,omitempty"`
 }
 
-func (e *ErrorResponse) Error() string {
-	return e.Err.Error()
+func (e *AppError) Error() string {
+	return e.Message
 }
 
-func ErrorBadRequest(err error) *ErrorResponse {
-	e := &ErrorResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusBadRequest,
-		ErrorText:      err.Error(),
+func NewAppError(code int, error error) *AppError {
+	return &AppError{
+		Code:    code,
+		Message: error.Error(),
 	}
-	return e
 }
 
-func ErrorInternalServer(err error) *ErrorResponse {
-	e := &ErrorResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusInternalServerError,
-		ErrorText:      err.Error(),
+func NewBadRequestError(error error) *AppError {
+	return &AppError{
+		Code:    http.StatusBadRequest,
+		Message: error.Error(),
 	}
-	return e
+}
+func NewNotFoundError(error error) *AppError {
+	return &AppError{
+		Code:    http.StatusNotFound,
+		Message: error.Error(),
+	}
 }
 
-func ErrorNotFound(err error) *ErrorResponse {
-	e := &ErrorResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusNotFound,
-		ErrorText:      err.Error(),
+func NewForbiddenError(error error) *AppError {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: error.Error(),
 	}
-	return e
 }
 
-func ErrorUnauthorized(err error) *ErrorResponse {
-	e := &ErrorResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusUnauthorized,
-		ErrorText:      err.Error(),
+func NewUnauthorizedError(error error) *AppError {
+	return &AppError{
+		Code:    http.StatusUnauthorized,
+		Message: error.Error(),
 	}
-	return e
 }
 
-func ErrorForbidden(err error) *ErrorResponse {
-	e := &ErrorResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusForbidden,
-		ErrorText:      err.Error(),
+func NewInternalServerError(error error) *AppError {
+	return &AppError{
+		Code:    http.StatusInternalServerError,
+		Message: error.Error(),
 	}
-	return e
 }

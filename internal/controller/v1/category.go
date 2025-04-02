@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -32,24 +31,14 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	category, err := c.categoryService.GetById(id)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, err.(*errx.ErrorResponse).HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -61,9 +50,7 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := c.categoryService.GetAll()
 	if err != nil {
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -78,9 +65,8 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	categoryRequest := &categorySchemas.RequestModel{}
 	if err := render.Bind(r, categoryRequest); err != nil {
-		errResponse := errx.ErrorBadRequest(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(err)
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -91,15 +77,7 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 
 	createdCategory, err := c.categoryService.Create(category)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -112,17 +90,15 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	categoryRequest := &categorySchemas.RequestModel{}
 	if err := render.Bind(r, categoryRequest); err != nil {
-		errResponse := errx.ErrorBadRequest(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(err)
+		handleError(w, r, errResponse)
 		return
 	}
 
@@ -133,16 +109,7 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 
 	updatedCategory, err := c.categoryService.Update(id, category)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
@@ -155,24 +122,14 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
 	if err != nil {
-		errResponse := errx.ErrorBadRequest(fmt.Errorf("invalid id"))
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, errResponse)
 		return
 	}
 
 	err = c.categoryService.Delete(id)
 	if err != nil {
-		var errorResponse *errx.ErrorResponse
-		if errors.As(err, &errorResponse) {
-			render.Status(r, errorResponse.HTTPStatusCode)
-			render.JSON(w, r, err)
-			return
-		}
-
-		errResponse := errx.ErrorInternalServer(err)
-		render.Status(r, errResponse.HTTPStatusCode)
-		render.JSON(w, r, errResponse)
+		handleError(w, r, err)
 		return
 	}
 
