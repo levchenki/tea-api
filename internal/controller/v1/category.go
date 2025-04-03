@@ -29,7 +29,6 @@ func NewCategoryController(categoryService CategoryService) *CategoryController 
 
 // GetCategoryById godoc
 //
-//	@Summary	Return category by
 //	@Summary	Return category by ID
 //	@Tags		Category
 //	@Accept		json
@@ -60,8 +59,8 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 	render.JSON(w, r, response)
 }
 
-	@Summary	Return all cate
 // GetAllCategories godoc
+//
 //	@Summary	Return all categories
 //	@Tags		Category
 //	@Accept		json
@@ -84,10 +83,8 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 	render.JSON(w, r, response)
 }
 
-
-//	@Tags		Category
-//	
 // CreateCategory godoc
+//
 //	@Summary	Create category
 //	@Tags		Category
 //	@Accept		json
@@ -122,10 +119,10 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 	render.Status(r, http.StatusCreated)
 	response := categorySchemas.NewResponseModel(createdCategory)
 	render.JSON(w, r, response)
-y
 }
 
 // UpdateCategory godoc
+//
 //	@Summary	Update category
 //	@Tags		Category
 //	@Accept		json
@@ -170,10 +167,10 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	render.Status(r, http.StatusOK)
 	response := categorySchemas.NewResponseModel(updatedCategory)
 	render.JSON(w, r, response)
-r
 }
 
 // DeleteCategory godoc
+//
 //	@Summary	Delete category
 //	@Tags		Category
 //	@Accept		json
