@@ -19,7 +19,7 @@ type Filters struct {
 	SortBy     SortByFilter `json:"sortBy,omitempty"`
 	IsAsc      bool         `json:"isAsc"`
 	IsDeleted  bool         `json:"isDeleted,omitempty" db:"is_deleted"`
-	UserId     uuid.UUID    `json:"userId" db:"user_id"`
+	UserId     uuid.UUID    `db:"user_id"`
 }
 
 type SortByFilter string

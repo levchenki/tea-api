@@ -26,6 +26,15 @@ func NewTagController(tagService TagService) *TagController {
 	return &TagController{tagService: tagService}
 }
 
+// GetAllTags godoc
+//
+//	@Summary	Get all tags
+//	@Tags		Tags
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{array}		tagSchemas.ResponseModel
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/tags [get]
 func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	tags, err := c.tagService.GetAll()
 	if err != nil {
@@ -42,6 +51,20 @@ func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// CreateTag godoc
+//
+//	@Summary	Create a new tag
+//	@Tags		Tags
+//	@Accept		json
+//	@Produce	json
+//	@Param		tag	body		tagSchemas.RequestModel	true	"Tag"
+//	@Success	201	{object}	tagSchemas.ResponseModel
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	403	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/tags [post]
+//	@Security	BearerAuth
 func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 	tagRequest := &tagSchemas.RequestModel{}
 	if err := render.Bind(r, tagRequest); err != nil {
@@ -66,6 +89,22 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, response)
 }
 
+// UpdateTag godoc
+//
+//	@Summary	Update an existing tag
+//	@Tags		Tags
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string					true	"Tag ID"
+//	@Param		tag	body		tagSchemas.RequestModel	true	"Tag"
+//	@Success	200	{object}	tagSchemas.ResponseModel
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	403	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/tags/{id} [put]
+//	@Security	BearerAuth
 func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
@@ -99,6 +138,21 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, response)
 }
 
+// DeleteTag godoc
+//
+//	@Summary	Delete a tag
+//	@Tags		Tags
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"Tag ID"
+//	@Success	200	{object}	bool
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	403	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/tags/{id} [delete]
+//	@Security	BearerAuth
 func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)

@@ -27,6 +27,19 @@ func NewCategoryController(categoryService CategoryService) *CategoryController 
 	return &CategoryController{categoryService: categoryService}
 }
 
+// GetCategoryById godoc
+//
+//	@Summary	Return category by
+//	@Summary	Return category by ID
+//	@Tags		Category
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"Category ID"
+//	@Success	200	{object}	categorySchemas.ResponseModel
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/categories/{id} [get]
 func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
@@ -47,6 +60,15 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 	render.JSON(w, r, response)
 }
 
+	@Summary	Return all cate
+// GetAllCategories godoc
+//	@Summary	Return all categories
+//	@Tags		Category
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	[]categorySchemas.ResponseModel
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/categories [get]
 func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := c.categoryService.GetAll()
 	if err != nil {
@@ -62,6 +84,22 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 	render.JSON(w, r, response)
 }
 
+
+//	@Tags		Category
+//	
+// CreateCategory godoc
+//	@Summary	Create category
+//	@Tags		Category
+//	@Accept		json
+//	@Produce	json
+//	@Param		category	body		categorySchemas.RequestModel	true	"Category"
+//	@Success	201			{object}	categorySchemas.ResponseModel
+//	@Failure	400			{object}	errx.AppError
+//	@Failure	401			{object}	errx.AppError
+//	@Failure	403			{object}	errx.AppError
+//	@Failure	500			{object}	errx.AppError
+//	@Router		/api/v1/categories [post]
+//	@Security	BearerAuth
 func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	categoryRequest := &categorySchemas.RequestModel{}
 	if err := render.Bind(r, categoryRequest); err != nil {
@@ -84,8 +122,24 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 	render.Status(r, http.StatusCreated)
 	response := categorySchemas.NewResponseModel(createdCategory)
 	render.JSON(w, r, response)
+y
 }
 
+// UpdateCategory godoc
+//	@Summary	Update category
+//	@Tags		Category
+//	@Accept		json
+//	@Produce	json
+//	@Param		id			path		string							true	"Category ID"
+//	@Param		category	body		categorySchemas.RequestModel	true	"Category"
+//	@Success	200			{object}	categorySchemas.ResponseModel
+//	@Failure	400			{object}	errx.AppError
+//	@Failure	401			{object}	errx.AppError
+//	@Failure	403			{object}	errx.AppError
+//	@Failure	404			{object}	errx.AppError
+//	@Failure	500			{object}	errx.AppError
+//	@Router		/api/v1/categories/{id} [put]
+//	@Security	BearerAuth
 func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
@@ -116,8 +170,23 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	render.Status(r, http.StatusOK)
 	response := categorySchemas.NewResponseModel(updatedCategory)
 	render.JSON(w, r, response)
+r
 }
 
+// DeleteCategory godoc
+//	@Summary	Delete category
+//	@Tags		Category
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"Category ID"
+//	@Success	200	{object}	bool
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	403	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/categories/{id} [delete]
+//	@Security	BearerAuth
 func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)

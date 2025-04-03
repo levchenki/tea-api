@@ -35,6 +35,18 @@ func NewUserController(jwtSecret, botToken string, userService UserService) *Use
 	return &UserController{jwtSecret, botToken, userService}
 }
 
+// Auth godoc
+//
+//	@Summary	Auth
+//	@Tags		Auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		telegramUser	body		schemas.TelegramUser	true	"Telegram user"
+//	@Success	200				token		string
+//	@Failure	400				{object}	errx.AppError
+//	@Failure	403				{object}	errx.AppError
+//	@Failure	500				{object}	errx.AppError
+//	@Router		/api/v1/auth [post]
 func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	var telegramUser schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {

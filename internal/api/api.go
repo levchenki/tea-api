@@ -5,8 +5,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/levchenki/tea-api/docs"
 	v1 "github.com/levchenki/tea-api/internal/api/v1"
 	"github.com/levchenki/tea-api/internal/config"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
@@ -25,7 +27,10 @@ func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
 
 	v1Router := v1.NewRouter(cfg, db)
 
+	r.Get("/swagger/*", httpSwagger.Handler())
+
 	r.Route("/api", func(r chi.Router) {
+
 		r.Mount("/v1", v1Router)
 	})
 

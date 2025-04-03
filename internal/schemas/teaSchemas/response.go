@@ -36,7 +36,7 @@ type WithRatingResponseModel struct {
 	ResponseModel
 	Rating        float64 `json:"rating,omitempty"`
 	AverageRating float64 `json:"averageRating,omitempty"`
-	Note          string  `json:"note,omitempty"`
+	Note          string  `json:"note,omitempty" example:"This is a note"`
 }
 
 func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingResponseModel {
