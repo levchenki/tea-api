@@ -8,6 +8,7 @@ import (
 	_ "github.com/levchenki/tea-api/docs"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
+	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"net/http"
@@ -24,10 +25,14 @@ type TeaService interface {
 
 type TeaController struct {
 	teaService TeaService
+	log        logx.AppLogger
 }
 
-func NewTeaController(teaService TeaService) *TeaController {
-	return &TeaController{teaService: teaService}
+func NewTeaController(teaService TeaService, log logx.AppLogger) *TeaController {
+	return &TeaController{
+		teaService: teaService,
+		log:        log,
+	}
 }
 
 // GetTeaById godoc
@@ -47,7 +52,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -63,7 +68,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	teaById, err := c.teaService.GetTeaById(id, userId)
 
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -97,7 +102,7 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 
 	if err := filters.Validate(r); err != nil {
 		errorResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errorResponse)
+		handleError(w, r, c.log, errorResponse)
 		return
 	}
 
@@ -109,7 +114,7 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 
 	teas, err := c.teaService.GetAllTeas(filters)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -139,13 +144,13 @@ func (c *TeaController) CreateTea(w http.ResponseWriter, r *http.Request) {
 	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	tea, err := c.teaService.CreateTea(teaRequest)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 	render.Status(r, http.StatusCreated)
@@ -172,13 +177,13 @@ func (c *TeaController) DeleteTea(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	err = c.teaService.DeleteTea(id)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -206,26 +211,26 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	teaRequest := &teaSchemas.RequestModel{}
 	if err := render.Bind(r, teaRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	tea, err := c.teaService.UpdateTea(id, teaRequest)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
 	if tea == nil {
 		errResponse := errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -253,7 +258,7 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errorResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errorResponse)
+		handleError(w, r, c.log, errorResponse)
 		return
 	}
 
@@ -262,19 +267,19 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 	evaluation := &teaSchemas.Evaluation{}
 	if err = render.Bind(r, evaluation); err != nil {
 		errorResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errorResponse)
+		handleError(w, r, c.log, errorResponse)
 		return
 	}
 
 	evaluatedTea, err := c.teaService.Evaluate(id, userClaims.Id, evaluation)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
 	if evaluatedTea == nil {
 		errResponse := errx.NewNotFoundError(fmt.Errorf("tea with id %s is not found", id.String()))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 

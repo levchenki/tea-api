@@ -8,10 +8,11 @@ import (
 	_ "github.com/levchenki/tea-api/docs"
 	v1 "github.com/levchenki/tea-api/internal/api/v1"
 	"github.com/levchenki/tea-api/internal/config"
+	"github.com/levchenki/tea-api/internal/logx"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
+func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -25,7 +26,7 @@ func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
 		MaxAge:           300,
 	}))
 
-	v1Router := v1.NewRouter(cfg, db)
+	v1Router := v1.NewRouter(cfg, db, log)
 
 	r.Get("/swagger/*", httpSwagger.Handler())
 

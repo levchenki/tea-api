@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
+	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/schemas/categorySchemas"
 	"net/http"
 )
@@ -21,10 +22,14 @@ type CategoryService interface {
 
 type CategoryController struct {
 	categoryService CategoryService
+	log             logx.AppLogger
 }
 
-func NewCategoryController(categoryService CategoryService) *CategoryController {
-	return &CategoryController{categoryService: categoryService}
+func NewCategoryController(categoryService CategoryService, log logx.AppLogger) *CategoryController {
+	return &CategoryController{
+		categoryService: categoryService,
+		log:             log,
+	}
 }
 
 // GetCategoryById godoc
@@ -44,13 +49,13 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	category, err := c.categoryService.GetById(id)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -71,7 +76,7 @@ func (c *CategoryController) GetCategoryById(w http.ResponseWriter, r *http.Requ
 func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := c.categoryService.GetAll()
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -101,7 +106,7 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 	categoryRequest := &categorySchemas.RequestModel{}
 	if err := render.Bind(r, categoryRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -112,7 +117,7 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 
 	createdCategory, err := c.categoryService.Create(category)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -142,14 +147,14 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	categoryRequest := &categorySchemas.RequestModel{}
 	if err := render.Bind(r, categoryRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -160,7 +165,7 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 
 	updatedCategory, err := c.categoryService.Update(id, category)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -189,13 +194,13 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	err = c.categoryService.Delete(id)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 

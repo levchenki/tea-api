@@ -5,11 +5,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/levchenki/tea-api/internal/config"
 	v1 "github.com/levchenki/tea-api/internal/controller/v1"
+	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/repository/postgres"
 	"github.com/levchenki/tea-api/internal/service"
 )
 
-func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
+func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	teaRepository := postgres.NewTeaRepository(db)
 	tagRepository := postgres.NewTagRepository(db)
 	userRepository := postgres.NewUserRepository(db)
@@ -20,14 +21,15 @@ func NewRouter(cfg *config.Config, db *sqlx.DB) *chi.Mux {
 	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
 	tagService := service.NewTagService(tagRepository)
 
-	teaControllerV1 := v1.NewTeaController(teaService)
-	categoryControllerV1 := v1.NewCategoryController(categoryService)
-	tagControllerV1 := v1.NewTagController(tagService)
+	teaControllerV1 := v1.NewTeaController(teaService, log)
+	categoryControllerV1 := v1.NewCategoryController(categoryService, log)
+	tagControllerV1 := v1.NewTagController(tagService, log)
 
 	authControllerV1 := v1.NewUserController(
 		cfg.JWTSecretKey,
 		cfg.BotToken,
 		userService,
+		log,
 	)
 
 	r := chi.NewRouter()

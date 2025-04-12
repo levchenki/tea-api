@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
+	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/schemas/tagSchemas"
 	"net/http"
 )
@@ -20,10 +21,11 @@ type TagService interface {
 
 type TagController struct {
 	tagService TagService
+	log        logx.AppLogger
 }
 
-func NewTagController(tagService TagService) *TagController {
-	return &TagController{tagService: tagService}
+func NewTagController(tagService TagService, log logx.AppLogger) *TagController {
+	return &TagController{tagService: tagService, log: log}
 }
 
 // GetAllTags godoc
@@ -38,7 +40,7 @@ func NewTagController(tagService TagService) *TagController {
 func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	tags, err := c.tagService.GetAll()
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -69,7 +71,7 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 	tagRequest := &tagSchemas.RequestModel{}
 	if err := render.Bind(r, tagRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -80,7 +82,7 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	createdTag, err := c.tagService.Create(tag)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -110,14 +112,14 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	tagRequest := &tagSchemas.RequestModel{}
 	if err = render.Bind(r, tagRequest); err != nil {
 		errResponse := errx.NewBadRequestError(err)
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -129,7 +131,7 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	updatedTag, err := c.tagService.Update(id, tag)
 
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 
@@ -158,13 +160,13 @@ func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(strId)
 	if err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	err = c.tagService.Delete(id)
 	if err != nil {
-		handleError(w, r, err)
+		handleError(w, r, c.log, err)
 		return
 	}
 

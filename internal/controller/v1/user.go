@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
+	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"net/http"
 	"sort"
@@ -29,10 +30,16 @@ type UserController struct {
 	jwtSecret   string
 	botToken    string
 	userService UserService
+	log         logx.AppLogger
 }
 
-func NewUserController(jwtSecret, botToken string, userService UserService) *UserController {
-	return &UserController{jwtSecret, botToken, userService}
+func NewUserController(jwtSecret, botToken string, userService UserService, log logx.AppLogger) *UserController {
+	return &UserController{
+		jwtSecret:   jwtSecret,
+		botToken:    botToken,
+		userService: userService,
+		log:         log,
+	}
 }
 
 // Auth godoc
@@ -51,20 +58,20 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	var telegramUser schemas.TelegramUser
 	if err := json.NewDecoder(r.Body).Decode(&telegramUser); err != nil {
 		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid data format: %w", err))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	if err := c.verifyTelegramAuth(telegramUser); err != nil {
 		errResponse := errx.NewForbiddenError(fmt.Errorf("telegram verification error: %w", err))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	exists, err := c.userService.Exists(telegramUser.Id)
 	if err != nil {
 		errResponse := errx.NewInternalServerError(fmt.Errorf("user exists check error: %w", err))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -73,7 +80,7 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 		err := c.userService.Create(emptyUser)
 		if err != nil {
 			errResponse := errx.NewInternalServerError(fmt.Errorf("user creation error: %w", err))
-			handleError(w, r, errResponse)
+			handleError(w, r, c.log, errResponse)
 			return
 		}
 	}
@@ -82,14 +89,14 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		errResponse := errx.NewInternalServerError(fmt.Errorf("user getting error: %w", err))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
 	token, err := c.generateJWT(u, c.jwtSecret)
 	if err != nil {
 		errResponse := errx.NewInternalServerError(fmt.Errorf("token generation error: %w", err))
-		handleError(w, r, errResponse)
+		handleError(w, r, c.log, errResponse)
 		return
 	}
 
@@ -165,7 +172,7 @@ func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.H
 
 			if !strings.HasPrefix(authHeader, "Bearer") {
 				errResponse := errx.NewUnauthorizedError(fmt.Errorf("user is not authorized"))
-				handleError(w, r, errResponse)
+				handleError(w, r, c.log, errResponse)
 				return
 			}
 
@@ -174,7 +181,7 @@ func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.H
 
 			if err != nil {
 				errResponse := errx.NewUnauthorizedError(err)
-				handleError(w, r, errResponse)
+				handleError(w, r, c.log, errResponse)
 				return
 			}
 
@@ -182,7 +189,7 @@ func (c *UserController) AuthMiddleware(required bool) func(http.Handler) http.H
 
 			if err != nil {
 				errResponse := errx.NewUnauthorizedError(err)
-				handleError(w, r, errResponse)
+				handleError(w, r, c.log, errResponse)
 				return
 			}
 
@@ -199,8 +206,9 @@ func (c *UserController) AdminMiddleware(next http.Handler) http.Handler {
 		if userClaims.Role == "admin" {
 			next.ServeHTTP(w, r)
 		} else {
-			errResponse := errx.NewForbiddenError(fmt.Errorf("user does not have admin permissions"))
-			handleError(w, r, errResponse)
+			err := fmt.Errorf("user with id %s does not have admin permissions", userClaims.Id)
+			errResponse := errx.NewForbiddenError(err)
+			handleError(w, r, c.log, errResponse)
 			return
 		}
 	})

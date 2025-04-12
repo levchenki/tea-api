@@ -5,9 +5,18 @@ import (
 	"log"
 )
 
+type Environment string
+
+const (
+	EnvDev   Environment = "dev"
+	EnvLocal Environment = "local"
+	EnvProd  Environment = "prod"
+)
+
 type Config struct {
 	Database     `env-prefix:"DB_"`
 	Server       `env-prefix:"SERVER_"`
+	Environment  `env:"APP_ENV" env-default:"dev"`
 	JWTSecretKey string `env:"JWT_SECRET_KEY" env-required:"true"`
 	BotToken     string `env:"TELEGRAM_BOT_TOKEN" env-required:"true"`
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
-	"log"
 	"strings"
 )
 
@@ -72,8 +71,6 @@ func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRat
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println(fmt.Sprintf("Built named query: %s", namedQuery))
 
 	err = r.db.Select(&teas, namedQuery, args...)
 	if err != nil {

@@ -40,7 +40,8 @@ func (s *CategoryService) GetById(id uuid.UUID) (*entity.Category, error) {
 	}
 
 	if category == nil {
-		return nil, errx.NewNotFoundError(fmt.Errorf("category with id %s is not found", id.String()))
+		err := fmt.Errorf("category with id %s is not found", id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	return category, nil
@@ -61,7 +62,8 @@ func (s *CategoryService) Create(category *entity.Category) (*entity.Category, e
 		return nil, err
 	}
 	if exists == true {
-		return nil, errx.NewBadRequestError(fmt.Errorf("category with name %s has already existed", category.Name))
+		err := fmt.Errorf("category with name %s has already existed", category.Name)
+		return nil, errx.NewBadRequestError(err)
 	}
 	createdCategory, err := s.categoryRepository.Create(category)
 	if err != nil {
@@ -77,7 +79,8 @@ func (s *CategoryService) Update(id uuid.UUID, category *entity.Category) (*enti
 		return nil, err
 	}
 	if exists == false {
-		return nil, errx.NewNotFoundError(fmt.Errorf("category with id %s is not found", category.Id.String()))
+		err := fmt.Errorf("category with id %s is not found", category.Id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	existsByName, err := s.categoryRepository.ExistsByName(id, category.Name)
@@ -85,7 +88,8 @@ func (s *CategoryService) Update(id uuid.UUID, category *entity.Category) (*enti
 		return nil, err
 	}
 	if existsByName == true {
-		return nil, errx.NewBadRequestError(fmt.Errorf("category with name %s has already existed", category.Name))
+		err := fmt.Errorf("category with name %s has already existed", category.Name)
+		return nil, errx.NewBadRequestError(err)
 	}
 
 	category.Id = id
@@ -103,7 +107,8 @@ func (s *CategoryService) Delete(id uuid.UUID) error {
 		return err
 	}
 	if exists == false {
-		return errx.NewNotFoundError(fmt.Errorf("category with id %s is not found", id.String()))
+		err := fmt.Errorf("category with id %s is not found", id.String())
+		return errx.NewNotFoundError(err)
 	}
 
 	existsByCategoryId, err := s.teaRepository.ExistsByCategoryId(id)
@@ -111,7 +116,8 @@ func (s *CategoryService) Delete(id uuid.UUID) error {
 		return err
 	}
 	if existsByCategoryId == true {
-		return errx.NewBadRequestError(fmt.Errorf("category with id %s has some teas", id.String()))
+		err := fmt.Errorf("category with id %s has some teas", id.String())
+		return errx.NewBadRequestError(err)
 	}
 
 	err = s.categoryRepository.Delete(id)
