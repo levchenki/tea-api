@@ -9,7 +9,7 @@ type ResponseModel struct {
 	Id          uuid.UUID    `json:"id"`
 	Name        string       `json:"name"`
 	Price       float64      `json:"price"`
-	Description string       `json:"description"`
+	Description *string      `json:"description"`
 	CategoryId  uuid.UUID    `json:"categoryId"`
 	Tags        []entity.Tag `json:"tags,omitempty"`
 	IsDeleted   bool         `json:"isDeleted,omitempty"`
@@ -20,7 +20,7 @@ func NewTeaResponseModel(tea *entity.Tea) *ResponseModel {
 		Id:          tea.Id,
 		Name:        tea.Name,
 		Price:       tea.Price,
-		Description: tea.Description,
+		Description: &tea.Description,
 		CategoryId:  tea.CategoryId,
 	}
 	if tea.Tags != nil || len(tea.Tags) > 0 {
@@ -42,12 +42,14 @@ type WithRatingResponseModel struct {
 func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingResponseModel {
 	t := &WithRatingResponseModel{
 		ResponseModel: ResponseModel{
-			Id:          tea.Id,
-			Name:        tea.Name,
-			Price:       tea.Price,
-			Description: tea.Description,
-			CategoryId:  tea.CategoryId,
+			Id:         tea.Id,
+			Name:       tea.Name,
+			Price:      tea.Price,
+			CategoryId: tea.CategoryId,
 		},
+	}
+	if tea.Description != "" {
+		t.Description = nil
 	}
 	if tea.Tags != nil || len(tea.Tags) > 0 {
 		t.Tags = tea.Tags

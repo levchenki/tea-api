@@ -10,7 +10,8 @@ import (
 
 type Filters struct {
 	Limit      uint64       `json:"limit" db:"limit"`
-	Offset     uint64       `json:"offset" db:"offset"`
+	Page       uint64       `json:"page"`
+	Offset     uint64       `db:"offset"`
 	CategoryId uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
 	Name       string       `json:"name,omitempty" db:"name"`
 	Tags       []string     `json:"tags,omitempty" db:"tags"`
@@ -50,13 +51,13 @@ func (tf *Filters) Validate(r *http.Request) error {
 	if err != nil {
 		limit = 10
 	}
-	offset, err := strconv.ParseUint(query.Get("offset"), 10, 64)
+	page, err := strconv.ParseUint(query.Get("page"), 10, 64)
 	if err != nil {
-		offset = 0
+		page = 1
 	}
 
 	tf.Limit = limit
-	tf.Offset = offset
+	tf.Page = page
 
 	categoryIdStr := query.Get("categoryId")
 	if categoryIdStr != "" {

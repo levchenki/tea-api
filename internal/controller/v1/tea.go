@@ -16,7 +16,7 @@ import (
 
 type TeaService interface {
 	GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
-	GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
+	GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error)
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
@@ -88,12 +88,12 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 //	@Param		limit		query		int						false	"Page size"
 //	@Param		categoryId	query		string					false	"Category ID"
 //	@Param		name		query		string					false	"Tea name"
-//	@Param		tags[]		query		[]string				false	"Tags"
+//	@Param		tags[]		query		[]string				false	"Tags"	collectionFormat(multi)
 //	@Param		isAsc		query		bool					false	"Sort order"
 //	@Param		sortBy		query		teaSchemas.SortByFilter	false	"Sort by field (name, price)"
-//	@Param		price[]		query		[]float64				false	"Price range"
+//	@Param		price[]		query		[]float64				false	"Price range"	collectionFormat(multi)
 //	@Param		isDeleted	query		bool					false	"Is deleted"
-//	@Success	200			{array}		teaSchemas.WithRatingResponseModel
+//	@Success	200			{object}	schemas.PaginatedResult[teaSchemas.WithRatingResponseModel]
 //	@Failure	400			{object}	errx.AppError
 //	@Failure	500			{object}	errx.AppError
 //	@Router		/api/v1/teas [get]
@@ -112,16 +112,22 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		filters.UserId = userClaims.Id
 	}
 
-	teas, err := c.teaService.GetAllTeas(filters)
+	teas, total, err := c.teaService.GetAllTeas(filters)
 	if err != nil {
 		handleError(w, r, c.log, err)
 		return
 	}
 
-	response := make([]*teaSchemas.WithRatingResponseModel, len(teas))
+	teaResponse := make([]*teaSchemas.WithRatingResponseModel, len(teas))
 	for i := range teas {
-		response[i] = teaSchemas.NewTeaWithRatingResponseModel(&teas[i])
+		teaResponse[i] = teaSchemas.NewTeaWithRatingResponseModel(&teas[i])
 	}
+
+	response := &schemas.PaginatedResult[*teaSchemas.WithRatingResponseModel]{
+		Items: teaResponse,
+		Total: total,
+	}
+
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, response)
 }

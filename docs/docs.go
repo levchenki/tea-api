@@ -34,7 +34,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schemas.TelegramUser"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas.TelegramUser"
                         }
                     }
                 ],
@@ -48,19 +48,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -84,14 +84,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/categorySchemas.ResponseModel"
+                                "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.ResponseModel"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -119,7 +119,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/categorySchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.RequestModel"
                         }
                     }
                 ],
@@ -127,31 +127,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/categorySchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -182,25 +182,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/categorySchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -235,7 +235,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/categorySchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.RequestModel"
                         }
                     }
                 ],
@@ -243,37 +243,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/categorySchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_categorySchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -313,31 +313,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -361,14 +361,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/tagSchemas.ResponseModel"
+                                "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_tagSchemas.ResponseModel"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -396,7 +396,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tagSchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_tagSchemas.RequestModel"
                         }
                     }
                 ],
@@ -404,31 +404,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/tagSchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_tagSchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -465,7 +465,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tagSchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_tagSchemas.RequestModel"
                         }
                     }
                 ],
@@ -473,37 +473,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/tagSchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_tagSchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -543,31 +543,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -615,7 +615,7 @@ const docTemplate = `{
                         "items": {
                             "type": "string"
                         },
-                        "collectionFormat": "csv",
+                        "collectionFormat": "multi",
                         "description": "Tags",
                         "name": "tags[]",
                         "in": "query"
@@ -641,7 +641,7 @@ const docTemplate = `{
                         "items": {
                             "type": "number"
                         },
-                        "collectionFormat": "csv",
+                        "collectionFormat": "multi",
                         "description": "Price range",
                         "name": "price[]",
                         "in": "query"
@@ -657,22 +657,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/teaSchemas.WithRatingResponseModel"
-                            }
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas.PaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -700,7 +697,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.RequestModel"
                         }
                     }
                 ],
@@ -708,31 +705,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.ResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.ResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -763,25 +760,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.WithRatingResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -816,7 +813,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.RequestModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.RequestModel"
                         }
                     }
                 ],
@@ -830,31 +827,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -894,31 +891,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -955,7 +952,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.Evaluation"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.Evaluation"
                         }
                     }
                 ],
@@ -963,31 +960,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/teaSchemas.WithRatingResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/errx.AppError"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
                     }
                 }
@@ -995,32 +992,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "categorySchemas.RequestModel": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "categorySchemas.ResponseModel": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Tag": {
+        "github_com_levchenki_tea-api_internal_entity.Tag": {
             "type": "object",
             "properties": {
                 "color": {
@@ -1034,7 +1006,7 @@ const docTemplate = `{
                 }
             }
         },
-        "errx.AppError": {
+        "github_com_levchenki_tea-api_internal_errx.AppError": {
             "type": "object",
             "properties": {
                 "error": {
@@ -1042,7 +1014,21 @@ const docTemplate = `{
                 }
             }
         },
-        "schemas.TelegramUser": {
+        "github_com_levchenki_tea-api_internal_schemas.PaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas.TelegramUser": {
             "type": "object",
             "properties": {
                 "auth_date": {
@@ -1068,7 +1054,32 @@ const docTemplate = `{
                 }
             }
         },
-        "tagSchemas.RequestModel": {
+        "github_com_levchenki_tea-api_internal_schemas_categorySchemas.RequestModel": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_categorySchemas.ResponseModel": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_tagSchemas.RequestModel": {
             "type": "object",
             "properties": {
                 "color": {
@@ -1079,7 +1090,7 @@ const docTemplate = `{
                 }
             }
         },
-        "tagSchemas.ResponseModel": {
+        "github_com_levchenki_tea-api_internal_schemas_tagSchemas.ResponseModel": {
             "type": "object",
             "properties": {
                 "color": {
@@ -1093,7 +1104,7 @@ const docTemplate = `{
                 }
             }
         },
-        "teaSchemas.Evaluation": {
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.Evaluation": {
             "type": "object",
             "properties": {
                 "note": {
@@ -1104,7 +1115,7 @@ const docTemplate = `{
                 }
             }
         },
-        "teaSchemas.RequestModel": {
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.RequestModel": {
             "type": "object",
             "properties": {
                 "categoryId": {
@@ -1130,7 +1141,7 @@ const docTemplate = `{
                 }
             }
         },
-        "teaSchemas.ResponseModel": {
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.ResponseModel": {
             "type": "object",
             "properties": {
                 "categoryId": {
@@ -1154,12 +1165,12 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Tag"
+                        "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 }
             }
         },
-        "teaSchemas.WithRatingResponseModel": {
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel": {
             "type": "object",
             "properties": {
                 "averageRating": {
@@ -1193,7 +1204,7 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Tag"
+                        "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 }
             }

@@ -11,7 +11,7 @@ import (
 type TeaRepository interface {
 	GetById(id uuid.UUID) (*entity.TeaWithRating, error)
 	GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
-	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
+	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error)
 	Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Delete(id uuid.UUID) error
 	Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error)
@@ -65,13 +65,13 @@ func (s *TeaService) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWith
 	return teaById, nil
 }
 
-func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
-	allTeas, err := s.teaRepository.GetAll(filters)
+func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error) {
+	allTeas, total, err := s.teaRepository.GetAll(filters)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return allTeas, err
+	return allTeas, total, err
 }
 
 func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
