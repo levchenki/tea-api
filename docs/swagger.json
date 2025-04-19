@@ -1,7 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is a Tea API for tea cafe.",
+        "title": "Tea API",
+        "contact": {
+            "name": "Danila Levchenko"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
     },
     "paths": {
         "/api/v1/auth": {
@@ -564,6 +573,11 @@
         },
         "/api/v1/teas": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -726,6 +740,11 @@
         },
         "/api/v1/teas/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -1197,6 +1216,13 @@
                     }
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
