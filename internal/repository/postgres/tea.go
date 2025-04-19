@@ -146,7 +146,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			updated_at,
 			is_deleted,
 			category_id
-		from teas`
+		from teas t`
 	}
 
 	getAllQuery, whereClause := r.selectAllWhereClause(getAllQuery, filters)
@@ -160,8 +160,10 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		} else {
 			a = "desc"
 		}
-		orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
-		getAllQuery += orderBy
+		if isNotEmptyUser || filters.SortBy != teaSchemas.RATING {
+			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
+			getAllQuery += orderBy
+		}
 	}
 
 	filters.Offset = filters.Limit * (filters.Page - 1)

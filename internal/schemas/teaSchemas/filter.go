@@ -26,8 +26,9 @@ type Filters struct {
 type SortByFilter string
 
 const (
-	NAME  SortByFilter = "name"
-	PRICE SortByFilter = "price"
+	NAME   SortByFilter = "name"
+	PRICE  SortByFilter = "price"
+	RATING SortByFilter = "rating"
 )
 
 func (f *SortByFilter) String() string {
@@ -35,8 +36,9 @@ func (f *SortByFilter) String() string {
 }
 func (f *SortByFilter) Parse(s string) error {
 	teaSortByFilterMap := map[string]SortByFilter{
-		"name":  NAME,
-		"price": PRICE,
+		"name":   NAME,
+		"price":  PRICE,
+		"rating": RATING,
 	}
 	if val, ok := teaSortByFilterMap[s]; ok {
 		*f = val

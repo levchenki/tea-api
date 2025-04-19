@@ -640,10 +640,11 @@ const docTemplate = `{
                     {
                         "enum": [
                             "name",
-                            "price"
+                            "price",
+                            "rating"
                         ],
                         "type": "string",
-                        "description": "Sort by field (name, price)",
+                        "description": "Sort by field (name, price, rating)",
                         "name": "sortBy",
                         "in": "query"
                     },
