@@ -47,6 +47,7 @@ func NewTeaController(teaService TeaService, log logx.AppLogger) *TeaController 
 //	@Failure	404	{object}	errx.AppError
 //	@Failure	500	{object}	errx.AppError
 //	@Router		/api/v1/teas/{id} [get]
+//	@Security	BearerAuth
 func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 	strId := chi.URLParam(r, "id")
 	id, err := uuid.Parse(strId)
@@ -88,15 +89,16 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 //	@Param		limit		query		int						false	"Page size"
 //	@Param		categoryId	query		string					false	"Category ID"
 //	@Param		name		query		string					false	"Tea name"
-//	@Param		tags[]		query		[]string				false	"Tags"	collectionFormat(multi)
+//	@Param		tags[]		query		[]string				false	"Tags"
 //	@Param		isAsc		query		bool					false	"Sort order"
-//	@Param		sortBy		query		teaSchemas.SortByFilter	false	"Sort by field (name, price)"
-//	@Param		price[]		query		[]float64				false	"Price range"	collectionFormat(multi)
+//	@Param		sortBy		query		teaSchemas.SortByFilter	false	"Sort by field (name, price, rating)"
+//	@Param		price[]		query		[]float64				false	"Price range"
 //	@Param		isDeleted	query		bool					false	"Is deleted"
 //	@Success	200			{object}	schemas.PaginatedResult[teaSchemas.WithRatingResponseModel]
 //	@Failure	400			{object}	errx.AppError
 //	@Failure	500			{object}	errx.AppError
 //	@Router		/api/v1/teas [get]
+//	@Security	BearerAuth
 func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 	filters := &teaSchemas.Filters{}
 

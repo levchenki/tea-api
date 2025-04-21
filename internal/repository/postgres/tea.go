@@ -104,8 +104,8 @@ func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRat
 }
 
 func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
-	countQuery := "select count(*) from teas"
-	_, whereClause := r.selectAllWhereClause(countQuery, *filters)
+	countQuery := "select count(*) from teas t"
+	_, whereClause := r.selectAllWhereClause(countQuery, filters)
 	countQuery += whereClause
 
 	countQuery, args, err := r.bindParams(countQuery, filters)
@@ -146,10 +146,10 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			updated_at,
 			is_deleted,
 			category_id
-		from teas`
+		from teas t`
 	}
 
-	getAllQuery, whereClause := r.selectAllWhereClause(getAllQuery, *filters)
+	getAllQuery, whereClause := r.selectAllWhereClause(getAllQuery, filters)
 
 	getAllQuery += whereClause
 
@@ -160,8 +160,10 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		} else {
 			a = "desc"
 		}
-		orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
-		getAllQuery += orderBy
+		if isNotEmptyUser || filters.SortBy != teaSchemas.RATING {
+			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
+			getAllQuery += orderBy
+		}
 	}
 
 	filters.Offset = filters.Limit * (filters.Page - 1)
@@ -175,7 +177,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 	return getAllQuery, args, nil
 }
 
-func (r *TeaRepository) selectAllWhereClause(getQuery string, filters teaSchemas.Filters) (string, string) {
+func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchemas.Filters) (string, string) {
 	var whereStmt string
 	filterStatements := make([]string, 0, 10)
 	if filters.CategoryId != uuid.Nil {
@@ -184,13 +186,13 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters teaSchemas
 	}
 
 	if filters.Name != "" {
-		nameStmt := "lower(teas.name) like lower(:name)"
+		nameStmt := "lower(t.name) like lower(:name)"
 		filters.Name = fmt.Sprintf("%%%s%%", filters.Name)
 		filterStatements = append(filterStatements, nameStmt)
 	}
 
 	if len(filters.Tags) > 0 {
-		getQuery += " join teas_tags tt on teas.id = tt.tea_id join tags on tt.tag_id = tags.id"
+		getQuery += " join teas_tags tt on t.id = tt.tea_id join tags on tt.tag_id = tags.id"
 
 		tagStmt := "tags.id in (:tags)"
 		filterStatements = append(filterStatements, tagStmt)
@@ -202,7 +204,7 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters teaSchemas
 	}
 
 	if !filters.IsDeleted {
-		isDeletedStmt := "teas.is_deleted is false"
+		isDeletedStmt := "t.is_deleted is false"
 		filterStatements = append(filterStatements, isDeletedStmt)
 	}
 
