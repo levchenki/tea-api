@@ -8,7 +8,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
-	"log"
 	"strings"
 )
 
@@ -26,11 +25,18 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
 		select
-			teas.*,
-			coalesce((select avg(rating) from evaluations where tea_id = teas.id), 0) as average_rating
-		from teas
-	 		left join evaluations on teas.id = evaluations.tea_id
-		where teas.id = $1 
+			t.id,
+			name,
+			price,
+			coalesce(description, '') as description,
+			t.created_at,
+			t.updated_at,
+			is_deleted,
+			category_id,
+			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
+		from teas t
+	 		left join evaluations on t.id = evaluations.tea_id
+		where t.id = $1 
 		limit 1`
 	err := r.db.Get(&tea, query, id)
 
@@ -46,13 +52,20 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 	tea := entity.TeaWithRating{}
 	query := `
 		select
-			teas.*,
+			t.id,
+			name,
+			price,
+			coalesce(description, '') as description,
+			t.created_at,
+			t.updated_at,
+			is_deleted,
+			category_id,
 			coalesce(rating, 0) as rating,
 			coalesce(note, '') as note,
-			coalesce((select avg(rating) from evaluations where tea_id = teas.id), 0) as average_rating
-		from teas
-	 		left join evaluations on teas.id = evaluations.tea_id and user_id = $1
-		where teas.id = $2 
+			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
+		from teas t
+	 		left join evaluations on t.id = evaluations.tea_id and user_id = $1
+		where t.id = $2 
 		limit 1`
 	err := r.db.Get(&tea, query, userId, id)
 
@@ -65,48 +78,121 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 	return &tea, nil
 }
 
-func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
+func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error) {
 	teas := make([]entity.TeaWithRating, 0)
 
-	namedQuery, args, err := r.prepareFilteredQuery(filters)
+	getAllQuery, getAllArgs, err := r.prepareSelectAllQuery(filters)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	err = r.db.Select(&teas, getAllQuery, getAllArgs...)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	log.Println(fmt.Sprintf("Built named query: %s", namedQuery))
-
-	err = r.db.Select(&teas, namedQuery, args...)
+	countQuery, countArgs, err := r.prepareCountQuery(filters)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	var totalCount uint64
+	err = r.db.Get(&totalCount, countQuery, countArgs...)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return teas, nil
+	return teas, totalCount, nil
 }
 
-func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
+func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
+	countQuery := "select count(*) from teas t"
+	_, whereClause := r.selectAllWhereClause(countQuery, filters)
+	countQuery += whereClause
+
+	countQuery, args, err := r.bindParams(countQuery, filters)
+	if err != nil {
+		return "", nil, err
+	}
+	return countQuery, args, nil
+}
+
+func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
 	filterStatements := make([]string, 0, 10)
-	var query string
-	if filters.UserId != uuid.Nil {
-		query = "select teas.*, coalesce(rating, 0) as rating from teas left join evaluations e on teas.id = e.tea_id"
+	var getAllQuery string
+	isNotEmptyUser := filters.UserId != uuid.Nil
+	if isNotEmptyUser {
+		getAllQuery = `
+		select
+			t.id,
+			name,
+			price,
+			coalesce(description, '') as description,
+			t.created_at,
+			t.updated_at,
+			is_deleted,
+			category_id,
+			coalesce(rating, 0) as rating 
+		from teas t
+		    left join evaluations e on t.id = e.tea_id`
 		userStmt := "(e.user_id = :user_id or rating is null)"
 		filterStatements = append(filterStatements, userStmt)
 	} else {
-		query = "select teas.* from teas"
+		getAllQuery = `
+		select 
+			id,
+			name,
+			price,
+			coalesce(description, '') as description,
+			created_at,
+			updated_at,
+			is_deleted,
+			category_id
+		from teas t`
 	}
 
+	getAllQuery, whereClause := r.selectAllWhereClause(getAllQuery, filters)
+
+	getAllQuery += whereClause
+
+	if filters.SortBy != "" {
+		a := "asc"
+		if filters.IsAsc {
+			a = "asc"
+		} else {
+			a = "desc"
+		}
+		if isNotEmptyUser || filters.SortBy != teaSchemas.RATING {
+			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
+			getAllQuery += orderBy
+		}
+	}
+
+	filters.Offset = filters.Limit * (filters.Page - 1)
+	getAllQuery += " limit :limit offset :offset"
+
+	getAllQuery, args, err := r.bindParams(getAllQuery, filters)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return getAllQuery, args, nil
+}
+
+func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchemas.Filters) (string, string) {
+	var whereStmt string
+	filterStatements := make([]string, 0, 10)
 	if filters.CategoryId != uuid.Nil {
 		categoryStmt := "category_id = :category_id"
 		filterStatements = append(filterStatements, categoryStmt)
 	}
 
 	if filters.Name != "" {
-		nameStmt := "lower(teas.name) like lower(:name)"
+		nameStmt := "lower(t.name) like lower(:name)"
 		filters.Name = fmt.Sprintf("%%%s%%", filters.Name)
 		filterStatements = append(filterStatements, nameStmt)
 	}
 
 	if len(filters.Tags) > 0 {
-		query += " join teas_tags tt on teas.id = tt.tea_id join tags on tt.tag_id = tags.id"
+		getQuery += " join teas_tags tt on t.id = tt.tea_id join tags on tt.tag_id = tags.id"
 
 		tagStmt := "tags.id in (:tags)"
 		filterStatements = append(filterStatements, tagStmt)
@@ -118,29 +204,19 @@ func (r *TeaRepository) prepareFilteredQuery(filters *teaSchemas.Filters) (strin
 	}
 
 	if !filters.IsDeleted {
-		isDeletedStmt := "teas.is_deleted is false"
+		isDeletedStmt := "t.is_deleted is false"
 		filterStatements = append(filterStatements, isDeletedStmt)
 	}
 
 	if len(filterStatements) > 0 {
-		query += fmt.Sprintf(" where %s", strings.Join(filterStatements, " and "))
+		whereStmt = fmt.Sprintf(" where %s", strings.Join(filterStatements, " and "))
 	}
 
-	if filters.SortBy != "" {
-		a := "asc"
-		if filters.IsAsc {
-			a = "asc"
-		} else {
-			a = "desc"
-		}
-		orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
+	return getQuery, whereStmt
+}
 
-		query += orderBy
-	}
-
-	query += " limit :limit offset :offset"
-
-	query, args, err := sqlx.Named(query, filters)
+func (r *TeaRepository) bindParams(query string, args ...interface{}) (string, []interface{}, error) {
+	query, args, err := sqlx.Named(query, args)
 	if err != nil {
 		return "", nil, err
 	}

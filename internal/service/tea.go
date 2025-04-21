@@ -11,7 +11,7 @@ import (
 type TeaRepository interface {
 	GetById(id uuid.UUID) (*entity.TeaWithRating, error)
 	GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error)
-	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error)
+	GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error)
 	Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Delete(id uuid.UUID) error
 	Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error)
@@ -52,7 +52,8 @@ func (s *TeaService) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWith
 	}
 
 	if teaById == nil {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		err := fmt.Errorf("tea with id %s is not found", id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)
@@ -64,13 +65,13 @@ func (s *TeaService) GetTeaById(id uuid.UUID, userId uuid.UUID) (*entity.TeaWith
 	return teaById, nil
 }
 
-func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, error) {
-	allTeas, err := s.teaRepository.GetAll(filters)
+func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRating, uint64, error) {
+	allTeas, total, err := s.teaRepository.GetAll(filters)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return allTeas, err
+	return allTeas, total, err
 }
 
 func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) {
@@ -79,7 +80,8 @@ func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) 
 		return nil, err
 	}
 	if exists == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
+		err := fmt.Errorf("tea with name %s has already existed", t.Name)
+		return nil, errx.NewBadRequestError(err)
 	}
 
 	createdTea, err := s.teaRepository.Create(t)
@@ -102,7 +104,8 @@ func (s *TeaService) DeleteTea(id uuid.UUID) error {
 		return err
 	}
 	if exists == false {
-		return errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		err := fmt.Errorf("tea with id %s is not found", id.String())
+		return errx.NewNotFoundError(err)
 	}
 	err = s.teaRepository.Delete(id)
 	if err != nil {
@@ -117,7 +120,8 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 		return nil, err
 	}
 	if exists == false {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		err := fmt.Errorf("tea with id %s is not found", id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	existsByName, err := s.teaRepository.ExistsByName(id, t.Name)
@@ -125,7 +129,8 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 		return nil, err
 	}
 	if existsByName == true {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tea with name %s has already existed", t.Name))
+		err := fmt.Errorf("tea with name %s has already existed", t.Name)
+		return nil, errx.NewBadRequestError(err)
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)
@@ -184,7 +189,8 @@ func (s *TeaService) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSch
 		return nil, err
 	}
 	if exists == false {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tea with id %s is not found", id.String()))
+		err := fmt.Errorf("tea with id %s is not found", id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	err = s.teaRepository.Evaluate(id, userId, evaluation)

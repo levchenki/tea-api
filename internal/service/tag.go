@@ -41,7 +41,8 @@ func (s *TagService) Create(tag *entity.Tag) (*entity.Tag, error) {
 		return nil, err
 	}
 	if exists {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s has already existed", tag.Name))
+		err := fmt.Errorf("tag with name %s has already existed", tag.Name)
+		return nil, errx.NewBadRequestError(err)
 	}
 
 	createdTag, err := s.tagRepository.Create(tag)
@@ -58,7 +59,8 @@ func (s *TagService) Update(id uuid.UUID, tag *entity.Tag) (*entity.Tag, error) 
 		return nil, err
 	}
 	if !exists {
-		return nil, errx.ErrorNotFound(fmt.Errorf("tag with id %s is not found", id.String()))
+		err := fmt.Errorf("tag with id %s is not found", id.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	existsByName, err := s.tagRepository.ExistsByName(id, tag.Name)
@@ -66,7 +68,8 @@ func (s *TagService) Update(id uuid.UUID, tag *entity.Tag) (*entity.Tag, error) 
 		return nil, err
 	}
 	if existsByName {
-		return nil, errx.ErrorBadRequest(fmt.Errorf("tag with name %s has already existed", tag.Name))
+		err := fmt.Errorf("tag with name %s has already existed", tag.Name)
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	tag.Id = id
@@ -83,12 +86,14 @@ func (s *TagService) Delete(id uuid.UUID) error {
 		return err
 	}
 	if !exists {
-		return errx.ErrorNotFound(fmt.Errorf("tag with id %s is not found", id.String()))
+		err := fmt.Errorf("tag with id %s is not found", id.String())
+		return errx.NewNotFoundError(err)
 	}
 
 	existsByTea, err := s.tagRepository.ExistsByTeas(id)
 	if existsByTea {
-		return errx.ErrorBadRequest(fmt.Errorf("tag with id %s has some teas", id.String()))
+		err := fmt.Errorf("tag with id %s has some teas", id.String())
+		return errx.NewBadRequestError(err)
 	}
 
 	err = s.tagRepository.Delete(id)
