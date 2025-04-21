@@ -1,4 +1,5 @@
 db_data/
 .idea
-.env
 target/
+.env
+.env.example
