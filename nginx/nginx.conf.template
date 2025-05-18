@@ -1,0 +1,19 @@
+user  root;
+worker_processes  1;
+
+events {
+}
+
+http {
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://client:80/;
+        }
+
+        location /api/ {
+            proxy_pass http://backend:${SERVER_PORT}/;
+        }
+    }
+}

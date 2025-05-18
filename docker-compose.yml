@@ -1,6 +1,6 @@
 services:
-  app:
-    container_name: "app"
+  backend:
+    container_name: "backend"
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,5 +22,29 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - ./db_data:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+
+  nginx:
+    container_name: "nginx"
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - './nginx/nginx.conf.template:/etc/nginx/nginx.conf.template'
+    env_file:
+      - ./.env
+    depends_on:
+      - backend
+      - client
+    command: /bin/sh -c "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+
+
+  client:
+    container_name: "client"
+    build:
+      context: ../tea-client
+      dockerfile: Dockerfile
     env_file:
       - ./.env

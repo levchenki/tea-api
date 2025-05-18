@@ -32,7 +32,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas.TelegramUser"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_userSchemas.TelegramUser"
                         }
                     }
                 ],
@@ -40,7 +40,56 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "token"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_userSchemas.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Update access token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_userSchemas.TokenResponse"
                         }
                     },
                     "400": {
@@ -1037,32 +1086,6 @@
                 }
             }
         },
-        "github_com_levchenki_tea-api_internal_schemas.TelegramUser": {
-            "type": "object",
-            "properties": {
-                "auth_date": {
-                    "type": "integer"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "photo_url": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_levchenki_tea-api_internal_schemas_categorySchemas.RequestModel": {
             "type": "object",
             "properties": {
@@ -1215,6 +1238,40 @@
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_userSchemas.TelegramUser": {
+            "type": "object",
+            "properties": {
+                "auth_date": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "photo_url": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_userSchemas.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
                 }
             }
         }

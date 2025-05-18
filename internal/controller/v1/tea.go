@@ -11,6 +11,7 @@ import (
 	"github.com/levchenki/tea-api/internal/logx"
 	"github.com/levchenki/tea-api/internal/schemas"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
+	"github.com/levchenki/tea-api/internal/schemas/userSchemas"
 	"net/http"
 )
 
@@ -57,8 +58,8 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user")
-	userClaims, ok := user.(*schemas.UserClaims)
+	user := r.Context().Value("accessTokenClaims")
+	userClaims, ok := user.(*userSchemas.AccessTokenClaims)
 	var userId uuid.UUID
 	if ok {
 		userId = userClaims.Id
@@ -108,8 +109,8 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user")
-	userClaims, ok := user.(*schemas.UserClaims)
+	user := r.Context().Value("accessTokenClaims")
+	userClaims, ok := user.(*userSchemas.AccessTokenClaims)
 	if ok {
 		filters.UserId = userClaims.Id
 	}
@@ -270,7 +271,7 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userClaims := r.Context().Value("user").(*schemas.UserClaims)
+	userClaims := r.Context().Value("accessTokenClaims").(*userSchemas.AccessTokenClaims)
 
 	evaluation := &teaSchemas.Evaluation{}
 	if err = render.Bind(r, evaluation); err != nil {

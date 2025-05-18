@@ -18,7 +18,7 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{cfg.AppDomain},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -28,10 +28,8 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 
 	v1Router := v1.NewRouter(cfg, db, log)
 
-	r.Get("/swagger/*", httpSwagger.Handler())
-
 	r.Route("/api", func(r chi.Router) {
-
+		r.Get("/swagger/*", httpSwagger.Handler())
 		r.Mount("/v1", v1Router)
 	})
 

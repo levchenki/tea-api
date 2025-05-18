@@ -17,6 +17,7 @@ type Config struct {
 	Database     `env-prefix:"DB_"`
 	Server       `env-prefix:"SERVER_"`
 	Environment  `env:"APP_ENV" env-default:"dev"`
+	AppDomain    string `env:"APP_DOMAIN" env-required:"true"`
 	JWTSecretKey string `env:"JWT_SECRET_KEY" env-required:"true"`
 	BotToken     string `env:"TELEGRAM_BOT_TOKEN" env-required:"true"`
 }

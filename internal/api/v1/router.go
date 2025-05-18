@@ -34,7 +34,11 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 
 	r := chi.NewRouter()
 
-	r.Post("/auth", authControllerV1.Auth)
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/", authControllerV1.Auth)
+		r.Post("/refresh", authControllerV1.UpdateAccessToken)
+	})
+
 	r.Route("/teas", func(r chi.Router) {
 
 		r.Group(func(r chi.Router) {
