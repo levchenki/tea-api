@@ -8,7 +8,8 @@ import (
 type ResponseModel struct {
 	Id          uuid.UUID    `json:"id"`
 	Name        string       `json:"name"`
-	Price       float64      `json:"price"`
+	ServePrice  float64      `json:"serve_price"`
+	WeightPrice float64      `json:"weight_price"`
 	Description *string      `json:"description"`
 	CategoryId  uuid.UUID    `json:"categoryId"`
 	Tags        []entity.Tag `json:"tags,omitempty"`
@@ -19,7 +20,8 @@ func NewTeaResponseModel(tea *entity.Tea) *ResponseModel {
 	r := &ResponseModel{
 		Id:          tea.Id,
 		Name:        tea.Name,
-		Price:       tea.Price,
+		ServePrice:  tea.ServePrice,
+		WeightPrice: tea.WeightPrice,
 		Description: &tea.Description,
 		CategoryId:  tea.CategoryId,
 	}
@@ -42,10 +44,11 @@ type WithRatingResponseModel struct {
 func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingResponseModel {
 	t := &WithRatingResponseModel{
 		ResponseModel: ResponseModel{
-			Id:         tea.Id,
-			Name:       tea.Name,
-			Price:      tea.Price,
-			CategoryId: tea.CategoryId,
+			Id:          tea.Id,
+			Name:        tea.Name,
+			ServePrice:  tea.ServePrice,
+			WeightPrice: tea.WeightPrice,
+			CategoryId:  tea.CategoryId,
 		},
 	}
 	if tea.Description != "" {

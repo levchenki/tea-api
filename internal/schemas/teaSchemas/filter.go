@@ -9,26 +9,26 @@ import (
 )
 
 type Filters struct {
-	Limit      uint64       `json:"limit" db:"limit"`
-	Page       uint64       `json:"page"`
-	Offset     uint64       `db:"offset"`
-	CategoryId uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
-	Name       string       `json:"name,omitempty" db:"name"`
-	Tags       []string     `json:"tags,omitempty" db:"tags"`
-	MinPrice   float64      `json:"minPrice,omitempty" db:"min_price"`
-	MaxPrice   float64      `json:"maxPrice,omitempty" db:"max_price"`
-	SortBy     SortByFilter `json:"sortBy,omitempty"`
-	IsAsc      bool         `json:"isAsc"`
-	IsDeleted  bool         `json:"isDeleted,omitempty" db:"is_deleted"`
-	UserId     uuid.UUID    `db:"user_id"`
+	Limit         uint64       `json:"limit" db:"limit"`
+	Page          uint64       `json:"page"`
+	Offset        uint64       `db:"offset"`
+	CategoryId    uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
+	Name          string       `json:"name,omitempty" db:"name"`
+	Tags          []string     `json:"tags,omitempty" db:"tags"`
+	MinServePrice float64      `json:"min_serve_price,omitempty" db:"min_serve_price"`
+	MaxServePrice float64      `json:"max_serve_price,omitempty" db:"max_serve_price"`
+	SortBy        SortByFilter `json:"sortBy,omitempty"`
+	IsAsc         bool         `json:"isAsc"`
+	IsDeleted     bool         `json:"isDeleted,omitempty" db:"is_deleted"`
+	UserId        uuid.UUID    `db:"user_id"`
 }
 
 type SortByFilter string
 
 const (
-	NAME   SortByFilter = "name"
-	PRICE  SortByFilter = "price"
-	RATING SortByFilter = "rating"
+	Name       SortByFilter = "name"
+	ServePrice SortByFilter = "serve_price"
+	Rating     SortByFilter = "rating"
 )
 
 func (f *SortByFilter) String() string {
@@ -36,9 +36,9 @@ func (f *SortByFilter) String() string {
 }
 func (f *SortByFilter) Parse(s string) error {
 	teaSortByFilterMap := map[string]SortByFilter{
-		"name":   NAME,
-		"price":  PRICE,
-		"rating": RATING,
+		"name":        Name,
+		"serve_price": ServePrice,
+		"rating":      Rating,
 	}
 	if val, ok := teaSortByFilterMap[s]; ok {
 		*f = val
@@ -106,15 +106,15 @@ func (tf *Filters) Validate(r *http.Request) error {
 		tf.SortBy = filter
 	}
 
-	priceStr := query["price[]"]
-	if len(priceStr) > 0 {
-		if len(priceStr) != 2 {
+	servePriceStr := query["serve_price[]"]
+	if len(servePriceStr) > 0 {
+		if len(servePriceStr) != 2 {
 			if err != nil {
 				return fmt.Errorf("invalid price format. Expected 2 values")
 			}
 		}
-		prices := make([]float64, 0, len(priceStr))
-		for _, p := range priceStr {
+		prices := make([]float64, 0, len(servePriceStr))
+		for _, p := range servePriceStr {
 			parsedPrice, err := strconv.ParseFloat(p, 64)
 			if err != nil {
 				return fmt.Errorf("invalid price: %s", p)
@@ -122,8 +122,8 @@ func (tf *Filters) Validate(r *http.Request) error {
 			prices = append(prices, parsedPrice)
 			sort.Float64s(prices)
 		}
-		tf.MinPrice = prices[0]
-		tf.MaxPrice = prices[1]
+		tf.MinServePrice = prices[0]
+		tf.MaxServePrice = prices[1]
 	}
 
 	isDeleted, err := strconv.ParseBool(query.Get("isDeleted"))

@@ -681,11 +681,11 @@
                     {
                         "enum": [
                             "name",
-                            "price",
+                            "serve_price",
                             "rating"
                         ],
                         "type": "string",
-                        "description": "Sort by field (name, price, rating)",
+                        "description": "Sort by field (name, serve_price, rating)",
                         "name": "sortBy",
                         "in": "query"
                     },
@@ -695,8 +695,8 @@
                             "type": "number"
                         },
                         "collectionFormat": "multi",
-                        "description": "Price range",
-                        "name": "price[]",
+                        "description": "ServePrice range",
+                        "name": "serve_price[]",
                         "in": "query"
                     },
                     {
@@ -1162,7 +1162,7 @@
                 "name": {
                     "type": "string"
                 },
-                "price": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tagIds": {
@@ -1170,6 +1170,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },
@@ -1191,7 +1194,7 @@
                 "name": {
                     "type": "string"
                 },
-                "price": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tags": {
@@ -1199,6 +1202,9 @@
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },
@@ -1227,10 +1233,10 @@
                     "type": "string",
                     "example": "This is a note"
                 },
-                "price": {
+                "rating": {
                     "type": "number"
                 },
-                "rating": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tags": {
@@ -1238,6 +1244,9 @@
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },

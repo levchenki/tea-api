@@ -689,11 +689,11 @@ const docTemplate = `{
                     {
                         "enum": [
                             "name",
-                            "price",
+                            "serve_price",
                             "rating"
                         ],
                         "type": "string",
-                        "description": "Sort by field (name, price, rating)",
+                        "description": "Sort by field (name, serve_price, rating)",
                         "name": "sortBy",
                         "in": "query"
                     },
@@ -703,8 +703,8 @@ const docTemplate = `{
                             "type": "number"
                         },
                         "collectionFormat": "multi",
-                        "description": "Price range",
-                        "name": "price[]",
+                        "description": "ServePrice range",
+                        "name": "serve_price[]",
                         "in": "query"
                     },
                     {
@@ -1170,7 +1170,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "price": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tagIds": {
@@ -1178,6 +1178,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },
@@ -1199,7 +1202,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "price": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tags": {
@@ -1207,6 +1210,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },
@@ -1235,10 +1241,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "This is a note"
                 },
-                "price": {
+                "rating": {
                     "type": "number"
                 },
-                "rating": {
+                "serve_price": {
                     "type": "number"
                 },
                 "tags": {
@@ -1246,6 +1252,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "weight_price": {
+                    "type": "number"
                 }
             }
         },

@@ -27,7 +27,8 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 		select
 			t.id,
 			name,
-			price,
+			serve_price,
+			weight_price,
 			coalesce(description, '') as description,
 			t.created_at,
 			t.updated_at,
@@ -54,7 +55,8 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 		select
 			t.id,
 			name,
-			price,
+			serve_price,
+			weight_price,
 			coalesce(description, '') as description,
 			t.created_at,
 			t.updated_at,
@@ -124,7 +126,8 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		select
 			t.id,
 			name,
-			price,
+			serve_price,
+			weight_price,
 			coalesce(description, '') as description,
 			t.created_at,
 			t.updated_at,
@@ -140,7 +143,8 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		select 
 			id,
 			name,
-			price,
+			serve_price,
+			weight_price,
 			coalesce(description, '') as description,
 			created_at,
 			updated_at,
@@ -160,7 +164,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		} else {
 			a = "desc"
 		}
-		if isNotEmptyUser || filters.SortBy != teaSchemas.RATING {
+		if isNotEmptyUser || filters.SortBy != teaSchemas.Rating {
 			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
 			getAllQuery += orderBy
 		}
@@ -198,9 +202,9 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 		filterStatements = append(filterStatements, tagStmt)
 	}
 
-	if filters.MinPrice != 0 && filters.MaxPrice != 0 {
-		priceStmt := "price between :min_price and :max_price"
-		filterStatements = append(filterStatements, priceStmt)
+	if filters.MinServePrice != 0 && filters.MaxServePrice != 0 {
+		servePriceStmt := "serve_price between :min_serve_price and :max_serve_price"
+		filterStatements = append(filterStatements, servePriceStmt)
 	}
 
 	if !filters.IsDeleted {
@@ -238,7 +242,8 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 
 	tea := &entity.Tea{
 		Name:        inputTea.Name,
-		Price:       inputTea.Price,
+		ServePrice:  inputTea.ServePrice,
+		WeightPrice: inputTea.WeightPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
 	}
@@ -274,8 +279,8 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 func (r *TeaRepository) insertTea(inputTea *entity.Tea, tx *sqlx.Tx) (*entity.Tea, error) {
 	createdTea := &entity.Tea{}
 	rows, err := tx.NamedQuery(`
-		insert into teas (name, price, description, category_id)
-		values (:name, :price, :description, :category_id)
+		insert into teas (name, serve_price, weight_price, description, category_id)
+		values (:name, :serve_price, :weight_price, :description, :category_id)
 		returning teas.*`, inputTea)
 	if err != nil {
 		return nil, err
@@ -389,7 +394,8 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 	tea := &entity.Tea{
 		Id:          id,
 		Name:        inputTea.Name,
-		Price:       inputTea.Price,
+		ServePrice:  inputTea.ServePrice,
+		WeightPrice: inputTea.WeightPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
 		IsDeleted:   inputTea.IsDeleted,
@@ -398,7 +404,8 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 	rows, err := tx.NamedQuery(`
 		update teas set
 			name=:name,
-			price=:price,
+			serve_price=:serve_price,
+			weight_price=:weight_price,
 			description=:description,
 			updated_at=now(),
 			category_id=:category_id,
