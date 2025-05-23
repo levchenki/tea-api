@@ -8,8 +8,8 @@ import (
 type Tea struct {
 	Id          uuid.UUID `db:"id" json:"id"`
 	Name        string    `db:"name" json:"name"`
-	ServePrice  float64   `db:"serve_price" json:"serve_price"`
-	WeightPrice float64   `db:"weight_price" json:"weight_price"`
+	ServePrice  float64   `db:"serve_price" json:"servePrice"`
+	WeightPrice float64   `db:"weight_price" json:"weightPrice"`
 	Description string    `db:"description" json:"description"`
 	CreatedAt   time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at" json:"updatedAt"`

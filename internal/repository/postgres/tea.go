@@ -165,7 +165,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			a = "desc"
 		}
 		if isNotEmptyUser || filters.SortBy != teaSchemas.Rating {
-			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy, a)
+			orderBy := fmt.Sprintf(" order by %s %s", filters.SortBy.ToDbFilter(), a)
 			getAllQuery += orderBy
 		}
 	}

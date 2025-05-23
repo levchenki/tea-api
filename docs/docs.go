@@ -689,11 +689,11 @@ const docTemplate = `{
                     {
                         "enum": [
                             "name",
-                            "serve_price",
+                            "servePrice",
                             "rating"
                         ],
                         "type": "string",
-                        "description": "Sort by field (name, serve_price, rating)",
+                        "description": "Sort by field (name, servePrice, rating)",
                         "name": "sortBy",
                         "in": "query"
                     },
@@ -704,7 +704,7 @@ const docTemplate = `{
                         },
                         "collectionFormat": "multi",
                         "description": "ServePrice range",
-                        "name": "serve_price[]",
+                        "name": "servePrice[]",
                         "in": "query"
                     },
                     {
@@ -1170,7 +1170,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "serve_price": {
+                "servePrice": {
                     "type": "number"
                 },
                 "tagIds": {
@@ -1179,7 +1179,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "weight_price": {
+                "weightPrice": {
                     "type": "number"
                 }
             }
@@ -1202,7 +1202,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "serve_price": {
+                "servePrice": {
                     "type": "number"
                 },
                 "tags": {
@@ -1211,7 +1211,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 },
-                "weight_price": {
+                "weightPrice": {
                     "type": "number"
                 }
             }
@@ -1244,7 +1244,7 @@ const docTemplate = `{
                 "rating": {
                     "type": "number"
                 },
-                "serve_price": {
+                "servePrice": {
                     "type": "number"
                 },
                 "tags": {
@@ -1253,7 +1253,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 },
-                "weight_price": {
+                "weightPrice": {
                     "type": "number"
                 }
             }

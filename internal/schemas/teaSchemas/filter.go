@@ -15,8 +15,8 @@ type Filters struct {
 	CategoryId    uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
 	Name          string       `json:"name,omitempty" db:"name"`
 	Tags          []string     `json:"tags,omitempty" db:"tags"`
-	MinServePrice float64      `json:"min_serve_price,omitempty" db:"min_serve_price"`
-	MaxServePrice float64      `json:"max_serve_price,omitempty" db:"max_serve_price"`
+	MinServePrice float64      `json:"minServePrice,omitempty" db:"min_serve_price"`
+	MaxServePrice float64      `json:"maxServePrice,omitempty" db:"max_serve_price"`
 	SortBy        SortByFilter `json:"sortBy,omitempty"`
 	IsAsc         bool         `json:"isAsc"`
 	IsDeleted     bool         `json:"isDeleted,omitempty" db:"is_deleted"`
@@ -27,7 +27,7 @@ type SortByFilter string
 
 const (
 	Name       SortByFilter = "name"
-	ServePrice SortByFilter = "serve_price"
+	ServePrice SortByFilter = "servePrice"
 	Rating     SortByFilter = "rating"
 )
 
@@ -35,16 +35,24 @@ func (f *SortByFilter) String() string {
 	return string(*f)
 }
 func (f *SortByFilter) Parse(s string) error {
-	teaSortByFilterMap := map[string]SortByFilter{
-		"name":        Name,
-		"serve_price": ServePrice,
-		"rating":      Rating,
+	SortByMapping := map[string]SortByFilter{
+		"name":       Name,
+		"servePrice": ServePrice,
+		"rating":     Rating,
 	}
-	if val, ok := teaSortByFilterMap[s]; ok {
+	if val, ok := SortByMapping[s]; ok {
 		*f = val
 		return nil
 	}
 	return fmt.Errorf("invalid TeaSortByFilter value: %s", s)
+}
+func (f *SortByFilter) ToDbFilter() string {
+	dbFilters := map[SortByFilter]string{
+		Name:       "name",
+		ServePrice: "serve_price",
+		Rating:     "rating",
+	}
+	return dbFilters[*f]
 }
 
 func (tf *Filters) Validate(r *http.Request) error {
@@ -98,26 +106,26 @@ func (tf *Filters) Validate(r *http.Request) error {
 
 	sortBy := query.Get("sortBy")
 	if sortBy != "" {
-		filter := SortByFilter(sortBy)
-		err := filter.Parse(sortBy)
+		mappedSortBy := SortByFilter(sortBy)
+		err := mappedSortBy.Parse(sortBy)
 		if err != nil {
 			return fmt.Errorf("invalid sortBy value: %s", sortBy)
 		}
-		tf.SortBy = filter
+		tf.SortBy = mappedSortBy
 	}
 
-	servePriceStr := query["serve_price[]"]
+	servePriceStr := query["servePrice[]"]
 	if len(servePriceStr) > 0 {
 		if len(servePriceStr) != 2 {
 			if err != nil {
-				return fmt.Errorf("invalid price format. Expected 2 values")
+				return fmt.Errorf("invalid servePrice format. Expected 2 values")
 			}
 		}
 		prices := make([]float64, 0, len(servePriceStr))
 		for _, p := range servePriceStr {
 			parsedPrice, err := strconv.ParseFloat(p, 64)
 			if err != nil {
-				return fmt.Errorf("invalid price: %s", p)
+				return fmt.Errorf("invalid servePrice: %s", p)
 			}
 			prices = append(prices, parsedPrice)
 			sort.Float64s(prices)

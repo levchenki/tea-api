@@ -8,8 +8,8 @@ import (
 
 type RequestModel struct {
 	Name        string      `json:"name"`
-	ServePrice  float64     `json:"serve_price"`
-	WeightPrice float64     `json:"weight_price"`
+	ServePrice  float64     `json:"servePrice"`
+	WeightPrice float64     `json:"weightPrice"`
 	Description string      `json:"description"`
 	CategoryId  uuid.UUID   `json:"categoryId"`
 	TagIds      []uuid.UUID `json:"tagIds,omitempty"`
