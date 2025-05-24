@@ -18,6 +18,9 @@ type TeaRepository interface {
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) error
 	Exists(id uuid.UUID) (bool, error)
 	ExistsByName(existedId uuid.UUID, name string) (bool, error)
+
+	GetMinServePrice() (float64, error)
+	GetMaxServePrice() (float64, error)
 }
 
 type TeaTagRepository interface {
@@ -203,4 +206,16 @@ func (s *TeaService) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSch
 		return nil, err
 	}
 	return evaluatedTea, nil
+}
+
+func (s *TeaService) GetMinMaxServePrices() (float64, float64, error) {
+	minPrice, err := s.teaRepository.GetMinServePrice()
+	if err != nil {
+		return 0, 0, err
+	}
+	maxPrice, err := s.teaRepository.GetMaxServePrice()
+	if err != nil {
+		return 0, 0, err
+	}
+	return minPrice, maxPrice, nil
 }

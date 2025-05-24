@@ -71,3 +71,15 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 	}
 	return t
 }
+
+type MinMaxPricesResponseModel struct {
+	MinServePrice float64 `json:"minServePrice"`
+	MaxServePrice float64 `json:"maxServePrice"`
+}
+
+func NewMinMaxPrices(min, max float64) *MinMaxPricesResponseModel {
+	return &MinMaxPricesResponseModel{
+		MinServePrice: min,
+		MaxServePrice: max,
+	}
+}

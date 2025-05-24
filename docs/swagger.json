@@ -788,6 +788,52 @@
                 }
             }
         },
+        "/api/v1/teas/prices": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tea"
+                ],
+                "summary": "Get min and max serve prices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.MinMaxPricesResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/teas/{id}": {
             "get": {
                 "security": [
@@ -1143,6 +1189,17 @@
                     "type": "string"
                 },
                 "rating": {
+                    "type": "number"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.MinMaxPricesResponseModel": {
+            "type": "object",
+            "properties": {
+                "maxServePrice": {
+                    "type": "number"
+                },
+                "minServePrice": {
                     "type": "number"
                 }
             }

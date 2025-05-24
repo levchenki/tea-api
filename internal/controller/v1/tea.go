@@ -22,6 +22,8 @@ type TeaService interface {
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
+
+	GetMinMaxServePrices() (float64, float64, error)
 }
 
 type TeaController struct {
@@ -294,4 +296,28 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, teaSchemas.NewTeaWithRatingResponseModel(evaluatedTea))
+}
+
+// GetMinMaxServePrices godoc
+//
+//	@Summary	Get min and max serve prices
+//	@Tags		Tea
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	teaSchemas.MinMaxPricesResponseModel
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/teas/prices [get]
+func (c *TeaController) GetMinMaxServePrices(w http.ResponseWriter, r *http.Request) {
+	minPrice, maxPrice, err := c.teaService.GetMinMaxServePrices()
+	if err != nil {
+		handleError(w, r, c.log, err)
+		return
+	}
+
+	response := teaSchemas.NewMinMaxPrices(minPrice, maxPrice)
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, response)
 }
