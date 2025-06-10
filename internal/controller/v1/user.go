@@ -14,6 +14,7 @@ import (
 
 type UserService interface {
 	AuthenticateUser(tgUser *userSchemas.TelegramUser, botToken, jwtSecret string) (*userSchemas.UserTokens, error)
+	AuthenticateTelegramMiniApp(initData, botToken, jwtSecret string) (*userSchemas.UserTokens, error)
 	CheckAuthToken(authHeader string, jwtSecret string) (*userSchemas.AccessTokenClaims, error)
 	UpdateAccessToken(signedRefreshToken, jwtSecret string) (*userSchemas.UserTokens, error)
 }
@@ -55,6 +56,45 @@ func (c *UserController) Auth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens, err := c.userService.AuthenticateUser(tgUser, c.botToken, c.jwtSecret)
+
+	if err != nil {
+		handleError(w, r, c.log, err)
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:     "refreshToken",
+		Value:    tokens.RefreshToken.SignedValue,
+		Expires:  tokens.RefreshToken.Claims.Exp.Time,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+	http.SetCookie(w, cookie)
+	render.JSON(w, r, tokens)
+}
+
+// AuthMiniApp godoc
+//
+//	@Summary	Auth
+//	@Tags		Auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		MiniAppInitData	body		userSchemas.MiniAppInitRequest	true	"Telegram init data"
+//	@Success	200				{object}	userSchemas.TokenResponse
+//	@Failure	400				{object}	errx.AppError
+//	@Failure	403				{object}	errx.AppError
+//	@Failure	500				{object}	errx.AppError
+//	@Router		/api/v1/auth/mini-app [post]
+func (c *UserController) AuthMiniApp(w http.ResponseWriter, r *http.Request) {
+	var request userSchemas.MiniAppInitRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid data format: %w", err))
+		handleError(w, r, c.log, errResponse)
+		return
+	}
+
+	tokens, err := c.userService.AuthenticateTelegramMiniApp(request.InitData, c.botToken, c.jwtSecret)
 
 	if err != nil {
 		handleError(w, r, c.log, err)

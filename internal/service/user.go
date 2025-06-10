@@ -14,6 +14,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	tgMiniApp "github.com/telegram-mini-apps/init-data-golang"
 )
 
 type UserRepository interface {
@@ -57,6 +59,65 @@ func (s *UserService) AuthenticateUser(tgUser *userSchemas.TelegramUser, botToke
 	}
 
 	u, err := s.userRepository.GetByTelegramId(tgUser.Id)
+
+	if err != nil {
+		errResponse := errx.NewInternalServerError(fmt.Errorf("user getting error: %w", err))
+		return nil, errResponse
+	}
+
+	accessToken, err := s.generateAccessToken(u, jwtSecret)
+	if err != nil {
+		errResponse := errx.NewInternalServerError(fmt.Errorf("accessToken generation error: %w", err))
+		return nil, errResponse
+	}
+
+	refreshToken, err := s.createRefreshToken(u.Id, jwtSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := userSchemas.NewUserTokens(accessToken, refreshToken)
+	return tokens, nil
+}
+
+func (s *UserService) AuthenticateTelegramMiniApp(initData, botToken, jwtSecret string) (*userSchemas.UserTokens, error) {
+
+	expIn := 1 * time.Hour
+
+	err := tgMiniApp.Validate(initData, botToken, expIn)
+
+	if err != nil {
+		if errors.Is(err, tgMiniApp.ErrExpired) {
+			return nil, errx.NewUnauthorizedError(fmt.Errorf("mini app data is expired"))
+		}
+		return nil, err
+	}
+
+	parsed, err := tgMiniApp.Parse(initData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	parsedUser := parsed.User
+	tgUserId := uint64(parsedUser.ID)
+
+	exists, err := s.userRepository.Exists(tgUserId)
+	if err != nil {
+		errResponse := errx.NewInternalServerError(fmt.Errorf("user exists check error: %w", err))
+		return nil, errResponse
+	}
+
+	if !exists {
+		emptyUser := entity.NewEmptyUser(tgUserId, parsedUser.FirstName, parsedUser.LastName, parsedUser.Username)
+		err := s.userRepository.Create(emptyUser)
+		if err != nil {
+			errResponse := errx.NewInternalServerError(fmt.Errorf("user creation error: %w", err))
+			return nil, errResponse
+		}
+	}
+
+	u, err := s.userRepository.GetByTelegramId(tgUserId)
 
 	if err != nil {
 		errResponse := errx.NewInternalServerError(fmt.Errorf("user getting error: %w", err))

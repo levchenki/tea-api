@@ -36,6 +36,7 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/", authControllerV1.Auth)
+		r.Post("/mini-app", authControllerV1.AuthMiniApp)
 		r.Post("/refresh", authControllerV1.UpdateAccessToken)
 	})
 

@@ -72,6 +72,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/mini-app": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Auth",
+                "parameters": [
+                    {
+                        "description": "Telegram init data",
+                        "name": "MiniAppInitData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_userSchemas.MiniAppInitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_userSchemas.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/refresh": {
             "post": {
                 "consumes": [
@@ -1312,6 +1363,14 @@ const docTemplate = `{
                 },
                 "weightPrice": {
                     "type": "number"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_userSchemas.MiniAppInitRequest": {
+            "type": "object",
+            "properties": {
+                "initData": {
+                    "type": "string"
                 }
             }
         },

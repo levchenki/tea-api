@@ -9,3 +9,7 @@ type TelegramUser struct {
 	Hash      string `json:"hash"`
 	PhotoURL  string `json:"photo_url"`
 }
+
+type MiniAppInitRequest struct {
+	InitData string `json:"initData"`
+}
