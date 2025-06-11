@@ -66,6 +66,10 @@ func (tf *Filters) Validate(r *http.Request) error {
 		page = 1
 	}
 
+	if page == 0 {
+		return fmt.Errorf("the page can not be equal to 0")
+	}
+
 	tf.Limit = limit
 	tf.Page = page
 

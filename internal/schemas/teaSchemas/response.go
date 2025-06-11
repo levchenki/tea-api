@@ -52,7 +52,7 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 		},
 	}
 	if tea.Description != "" {
-		t.Description = nil
+		t.Description = &tea.Description
 	}
 	if tea.Tags != nil || len(tea.Tags) > 0 {
 		t.Tags = tea.Tags

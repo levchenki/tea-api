@@ -25,6 +25,7 @@ type TeaRepository interface {
 
 type TeaTagRepository interface {
 	GetByTeaId(teaId uuid.UUID) ([]entity.Tag, error)
+	GetAllByTeaIds(teaIds []uuid.UUID) (map[uuid.UUID][]entity.Tag, error)
 }
 
 type TeaService struct {
@@ -72,6 +73,21 @@ func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRa
 	allTeas, total, err := s.teaRepository.GetAll(filters)
 	if err != nil {
 		return nil, 0, err
+	}
+
+	teaIds := make([]uuid.UUID, len(allTeas))
+	for i := range allTeas {
+		teaIds[i] = allTeas[i].Id
+	}
+
+	tagsByTeaId, err := s.tagRepository.GetAllByTeaIds(teaIds)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i, t := range allTeas {
+		tags := tagsByTeaId[t.Id]
+		allTeas[i].Tags = tags
 	}
 
 	return allTeas, total, err

@@ -168,3 +168,43 @@ func (r *TagRepository) ExistsByTeas(id uuid.UUID) (bool, error) {
 	}
 	return exists, err
 }
+
+func (r *TagRepository) GetAllByTeaIds(teaIds []uuid.UUID) (map[uuid.UUID][]entity.Tag, error) {
+	query := `
+		select tt.tea_id,
+		       t.id,
+		       t.name,
+		       t.color
+		from tags t
+		         join teas_tags tt on t.id = tt.tag_id
+		where tt.tea_id in (?)
+	`
+
+	query, args, err := sqlx.In(query, teaIds)
+	if err != nil {
+		return nil, err
+	}
+
+	query = r.db.Rebind(query)
+
+	rows, err := r.db.Queryx(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[uuid.UUID][]entity.Tag)
+	for rows.Next() {
+		var (
+			teaId uuid.UUID
+			tag   entity.Tag
+		)
+		err = rows.Scan(&teaId, &tag.Id, &tag.Name, &tag.Color)
+		if err != nil {
+			return nil, err
+		}
+		result[teaId] = append(result[teaId], tag)
+	}
+
+	return result, nil
+}

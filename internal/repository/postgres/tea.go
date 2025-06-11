@@ -107,7 +107,7 @@ func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRat
 
 func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
 	countQuery := "select count(*) from teas t"
-	_, whereClause := r.selectAllWhereClause(countQuery, filters)
+	countQuery, whereClause := r.selectAllWhereClause(countQuery, filters)
 	countQuery += whereClause
 
 	countQuery, args, err := r.bindParams(countQuery, filters)
@@ -125,15 +125,15 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		getAllQuery = `
 		select
 			t.id,
-			name,
-			serve_price,
-			weight_price,
-			coalesce(description, '') as description,
+			t.name,
+			t.serve_price,
+			t.weight_price,
+			coalesce(t.description, '') as description,
 			t.created_at,
 			t.updated_at,
-			is_deleted,
-			category_id,
-			coalesce(rating, 0) as rating 
+			t.is_deleted,
+			t.category_id,
+			coalesce(t.rating, 0) as rating 
 		from teas t
 		    left join evaluations e on t.id = e.tea_id`
 		userStmt := "(e.user_id = :user_id or rating is null)"
@@ -141,15 +141,15 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 	} else {
 		getAllQuery = `
 		select 
-			id,
-			name,
-			serve_price,
-			weight_price,
-			coalesce(description, '') as description,
-			created_at,
-			updated_at,
-			is_deleted,
-			category_id
+			t.id,
+			t.name,
+			t.serve_price,
+			t.weight_price,
+			coalesce(t.description, '') as description,
+			t.created_at,
+			t.updated_at,
+			t.is_deleted,
+			t.category_id
 		from teas t`
 	}
 
@@ -185,7 +185,7 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 	var whereStmt string
 	filterStatements := make([]string, 0, 10)
 	if filters.CategoryId != uuid.Nil {
-		categoryStmt := "category_id = :category_id"
+		categoryStmt := "t.category_id = :category_id"
 		filterStatements = append(filterStatements, categoryStmt)
 	}
 
@@ -203,7 +203,7 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 	}
 
 	if filters.MinServePrice != 0 && filters.MaxServePrice != 0 {
-		servePriceStmt := "serve_price between :min_serve_price and :max_serve_price"
+		servePriceStmt := "t.serve_price between :min_serve_price and :max_serve_price"
 		filterStatements = append(filterStatements, servePriceStmt)
 	}
 
