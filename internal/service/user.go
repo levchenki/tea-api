@@ -43,41 +43,12 @@ func (s *UserService) AuthenticateUser(tgUser *userSchemas.TelegramUser, botToke
 		return nil, errResponse
 	}
 
-	exists, err := s.userRepository.Exists(tgUser.Id)
-	if err != nil {
-		errResponse := errx.NewInternalServerError(fmt.Errorf("user exists check error: %w", err))
-		return nil, errResponse
-	}
-
-	if !exists {
-		emptyUser := entity.NewEmptyUser(tgUser.Id, tgUser.FirstName, tgUser.LastName, tgUser.Username)
-		err := s.userRepository.Create(emptyUser)
-		if err != nil {
-			errResponse := errx.NewInternalServerError(fmt.Errorf("user creation error: %w", err))
-			return nil, errResponse
-		}
-	}
-
-	u, err := s.userRepository.GetByTelegramId(tgUser.Id)
-
-	if err != nil {
-		errResponse := errx.NewInternalServerError(fmt.Errorf("user getting error: %w", err))
-		return nil, errResponse
-	}
-
-	accessToken, err := s.generateAccessToken(u, jwtSecret)
-	if err != nil {
-		errResponse := errx.NewInternalServerError(fmt.Errorf("accessToken generation error: %w", err))
-		return nil, errResponse
-	}
-
-	refreshToken, err := s.createRefreshToken(u.Id, jwtSecret)
+	err := s.createIfNotExists(tgUser.Id, tgUser.FirstName, tgUser.LastName, tgUser.Username)
 	if err != nil {
 		return nil, err
 	}
 
-	tokens := userSchemas.NewUserTokens(accessToken, refreshToken)
-	return tokens, nil
+	return s.createUserTokens(tgUser.Id, jwtSecret)
 }
 
 func (s *UserService) AuthenticateTelegramMiniApp(initData, botToken, jwtSecret string) (*userSchemas.UserTokens, error) {
@@ -102,21 +73,33 @@ func (s *UserService) AuthenticateTelegramMiniApp(initData, botToken, jwtSecret 
 	parsedUser := parsed.User
 	tgUserId := uint64(parsedUser.ID)
 
+	err = s.createIfNotExists(tgUserId, parsedUser.FirstName, parsedUser.LastName, parsedUser.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.createUserTokens(tgUserId, jwtSecret)
+}
+
+func (s *UserService) createIfNotExists(tgUserId uint64, firstName, lastName, username string) error {
 	exists, err := s.userRepository.Exists(tgUserId)
 	if err != nil {
 		errResponse := errx.NewInternalServerError(fmt.Errorf("user exists check error: %w", err))
-		return nil, errResponse
+		return errResponse
 	}
 
 	if !exists {
-		emptyUser := entity.NewEmptyUser(tgUserId, parsedUser.FirstName, parsedUser.LastName, parsedUser.Username)
+		emptyUser := entity.NewEmptyUser(tgUserId, firstName, lastName, username)
 		err := s.userRepository.Create(emptyUser)
 		if err != nil {
 			errResponse := errx.NewInternalServerError(fmt.Errorf("user creation error: %w", err))
-			return nil, errResponse
+			return errResponse
 		}
 	}
+	return nil
+}
 
+func (s *UserService) createUserTokens(tgUserId uint64, jwtSecret string) (*userSchemas.UserTokens, error) {
 	u, err := s.userRepository.GetByTelegramId(tgUserId)
 
 	if err != nil {
@@ -138,6 +121,8 @@ func (s *UserService) AuthenticateTelegramMiniApp(initData, botToken, jwtSecret 
 	tokens := userSchemas.NewUserTokens(accessToken, refreshToken)
 	return tokens, nil
 }
+
+func (s *UserService) authenticate() {}
 
 func (s *UserService) createRefreshToken(userId uuid.UUID, jwtSecret string) (*userSchemas.RefreshToken, error) {
 	refreshToken, err := s.generateRefreshToken(userId, jwtSecret)
