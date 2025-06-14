@@ -1144,6 +1144,69 @@
                     }
                 }
             }
+        },
+        "/api/v1/teas/{id}/favourite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tea"
+                ],
+                "summary": "Add or remove tea to/from favourites",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tea ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is favourite status",
+                        "name": "isFavourite",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

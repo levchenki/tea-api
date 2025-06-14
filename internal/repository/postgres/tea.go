@@ -133,7 +133,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			t.updated_at,
 			t.is_deleted,
 			t.category_id,
-			coalesce(t.rating, 0) as rating 
+			coalesce(e.rating, 0) as rating 
 		from teas t
 		    left join evaluations e on t.id = e.tea_id`
 		userStmt := "(e.user_id = :user_id or rating is null)"
@@ -544,4 +544,48 @@ func (r *TeaRepository) GetMaxServePrice() (float64, error) {
 		return 0, err
 	}
 	return maxPrice, nil
+}
+
+func (r *TeaRepository) SetFavourite(id, userId uuid.UUID) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(`
+		insert into users_favourite_teas (tea_id, user_id)
+		values ($1, $2)
+		on conflict do nothing`, id, userId)
+
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) RemoveFavourite(id, userId uuid.UUID) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec("delete from users_favourite_teas where tea_id = $1 and user_id = $2", id, userId)
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }

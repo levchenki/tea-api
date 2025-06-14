@@ -1,0 +1,1 @@
+drop table users_favourite_teas;

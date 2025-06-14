@@ -13,6 +13,7 @@ import (
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"github.com/levchenki/tea-api/internal/schemas/userSchemas"
 	"net/http"
+	"strconv"
 )
 
 type TeaService interface {
@@ -22,6 +23,7 @@ type TeaService interface {
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
+	ToggleFavourites(id uuid.UUID, userId uuid.UUID, isFavourite bool) error
 
 	GetMinMaxServePrices() (float64, float64, error)
 }
@@ -320,4 +322,47 @@ func (c *TeaController) GetMinMaxServePrices(w http.ResponseWriter, r *http.Requ
 	response := teaSchemas.NewMinMaxPrices(minPrice, maxPrice)
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, response)
+}
+
+// ToggleFavourites godoc
+//
+//	@Summary	Add or remove tea to/from favourites
+//	@Tags		Tea
+//	@Accept		json
+//	@Produce	json
+//	@Param		id			path	string	true	"Tea ID"
+//	@Param		isFavourite	query	bool	false	"Is favourite status"
+//	@Success	200
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/teas/{id}/favourite [post]
+//	@Security	BearerAuth
+func (c *TeaController) ToggleFavourites(w http.ResponseWriter, r *http.Request) {
+	strId := chi.URLParam(r, "id")
+	id, err := uuid.Parse(strId)
+	if err != nil {
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, c.log, errResponse)
+		return
+	}
+
+	query := r.URL.Query()
+	isFavourite, err := strconv.ParseBool(query.Get("isFavourite"))
+	if err != nil {
+		errResponse := errx.NewBadRequestError(fmt.Errorf("invalid isFavourite"))
+		handleError(w, r, c.log, errResponse)
+		return
+	}
+
+	userClaims := r.Context().Value("accessTokenClaims").(*userSchemas.AccessTokenClaims)
+
+	err = c.teaService.ToggleFavourites(id, userClaims.Id, isFavourite)
+	if err != nil {
+		handleError(w, r, c.log, err)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 }

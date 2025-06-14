@@ -21,6 +21,9 @@ type TeaRepository interface {
 
 	GetMinServePrice() (float64, error)
 	GetMaxServePrice() (float64, error)
+
+	SetFavourite(id, userId uuid.UUID) error
+	RemoveFavourite(id, userId uuid.UUID) error
 }
 
 type TeaTagRepository interface {
@@ -234,4 +237,26 @@ func (s *TeaService) GetMinMaxServePrices() (float64, float64, error) {
 		return 0, 0, err
 	}
 	return minPrice, maxPrice, nil
+}
+
+func (s *TeaService) ToggleFavourites(id uuid.UUID, userId uuid.UUID, isFavourite bool) error {
+	exists, err := s.teaRepository.Exists(id)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		err := fmt.Errorf("tea with id %s is not found", id.String())
+		return errx.NewNotFoundError(err)
+	}
+
+	if isFavourite {
+		err = s.teaRepository.SetFavourite(id, userId)
+	} else {
+		err = s.teaRepository.RemoveFavourite(id, userId)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
