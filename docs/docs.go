@@ -1475,7 +1475,7 @@ const docTemplate = `{
         "github_com_levchenki_tea-api_internal_schemas_userSchemas.TokenResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "accessToken": {
                     "type": "string"
                 }
             }

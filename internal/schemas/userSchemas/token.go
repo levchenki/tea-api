@@ -9,7 +9,7 @@ import (
 )
 
 type TokenResponse struct {
-	Token string `json:"token"`
+	Token string `json:"accessToken"`
 }
 
 type AccessTokenClaims struct {
