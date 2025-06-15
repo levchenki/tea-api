@@ -763,6 +763,12 @@ const docTemplate = `{
                         "description": "Is deleted",
                         "name": "isDeleted",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is favourite",
+                        "name": "IsFavourite",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1403,6 +1409,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "isDeleted": {
+                    "type": "boolean"
+                },
+                "isFavourite": {
                     "type": "boolean"
                 },
                 "name": {

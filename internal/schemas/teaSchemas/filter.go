@@ -21,6 +21,7 @@ type Filters struct {
 	IsAsc         bool         `json:"isAsc"`
 	IsDeleted     bool         `json:"isDeleted,omitempty" db:"is_deleted"`
 	UserId        uuid.UUID    `db:"user_id"`
+	IsFavourite   bool         `json:"isFavourite,omitempty"`
 }
 
 type SortByFilter string
@@ -143,6 +144,12 @@ func (tf *Filters) Validate(r *http.Request) error {
 		isDeleted = false
 	}
 	tf.IsDeleted = isDeleted
+
+	IsFavourite, err := strconv.ParseBool(query.Get("IsFavourite"))
+	if err != nil {
+		IsFavourite = false
+	}
+	tf.IsFavourite = IsFavourite
 
 	return nil
 }

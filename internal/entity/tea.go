@@ -24,4 +24,5 @@ type TeaWithRating struct {
 	Rating        float64 `db:"rating,omitempty"`
 	Note          string  `db:"note,omitempty"`
 	AverageRating float64 `db:"average_rating, omitempty"`
+	IsFavourite   bool    `db:"is_favourite" json:"isFavourite"`
 }

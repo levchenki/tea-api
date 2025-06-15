@@ -39,6 +39,7 @@ type WithRatingResponseModel struct {
 	Rating        float64 `json:"rating,omitempty"`
 	AverageRating float64 `json:"averageRating,omitempty"`
 	Note          string  `json:"note,omitempty" example:"This is a note"`
+	IsFavourite   bool    `json:"isFavourite,omitempty"`
 }
 
 func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingResponseModel {
@@ -68,6 +69,9 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 	}
 	if tea.IsDeleted {
 		t.IsDeleted = tea.IsDeleted
+	}
+	if tea.IsFavourite {
+		t.IsFavourite = tea.IsFavourite
 	}
 	return t
 }

@@ -78,8 +78,7 @@ func NewUserTokens(accessToken *AccessToken, refreshToken *RefreshToken) *UserTo
 
 func (ut *UserTokens) MarshalJSON() ([]byte, error) {
 	type tokenOnly struct {
-		// todo token -> accessToken
-		Token string `json:"token"`
+		Token string `json:"accessToken"`
 	}
 	return json.Marshal(&tokenOnly{
 		Token: ut.AccessToken.SignedValue,

@@ -755,6 +755,12 @@
                         "description": "Is deleted",
                         "name": "isDeleted",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Is favourite",
+                        "name": "IsFavourite",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1395,6 +1401,9 @@
                     "type": "string"
                 },
                 "isDeleted": {
+                    "type": "boolean"
+                },
+                "isFavourite": {
                     "type": "boolean"
                 },
                 "name": {

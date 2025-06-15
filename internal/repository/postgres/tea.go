@@ -52,22 +52,28 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
-		select
-			t.id,
-			name,
-			serve_price,
-			weight_price,
-			coalesce(description, '') as description,
-			t.created_at,
-			t.updated_at,
-			is_deleted,
-			category_id,
-			coalesce(rating, 0) as rating,
-			coalesce(note, '') as note,
-			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
+		with favourites as (select tea_id,
+						   user_id,
+						   true as is_favourite
+					from users_favourite_teas
+					where user_id = $1)
+		select t.id,
+			   name,
+			   serve_price,
+			   weight_price,
+			   coalesce(description, '')                                              as description,
+			   t.created_at,
+			   t.updated_at,
+			   is_deleted,
+			   category_id,
+			   coalesce(rating, 0)                                                    as rating,
+			   coalesce(note, '')                                                     as note,
+			   coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,
+			   coalesce(is_favourite, false)                                          as is_favourite
 		from teas t
-	 		left join evaluations on t.id = evaluations.tea_id and user_id = $1
-		where t.id = $2 
+				 left join evaluations on t.id = evaluations.tea_id and user_id = $1
+				 left join favourites on t.id = favourites.tea_id
+		where t.id = $2
 		limit 1`
 	err := r.db.Get(&tea, query, userId, id)
 
@@ -106,7 +112,21 @@ func (r *TeaRepository) GetAll(filters *teaSchemas.Filters) ([]entity.TeaWithRat
 }
 
 func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
-	countQuery := "select count(*) from teas t"
+	var countQuery string
+	isNotEmptyUser := filters.UserId != uuid.Nil
+	if isNotEmptyUser {
+		countQuery = `
+		with favourites as (select tea_id,
+								   user_id,
+								   true as is_favourite
+							from users_favourite_teas
+							where user_id = :user_id)
+		select count(*)
+		from teas t
+				 join favourites on t.id = favourites.tea_id`
+	} else {
+		countQuery = "select count(*) from teas t"
+	}
 	countQuery, whereClause := r.selectAllWhereClause(countQuery, filters)
 	countQuery += whereClause
 
@@ -123,19 +143,25 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 	isNotEmptyUser := filters.UserId != uuid.Nil
 	if isNotEmptyUser {
 		getAllQuery = `
-		select
-			t.id,
-			t.name,
-			t.serve_price,
-			t.weight_price,
-			coalesce(t.description, '') as description,
-			t.created_at,
-			t.updated_at,
-			t.is_deleted,
-			t.category_id,
-			coalesce(e.rating, 0) as rating 
+		with favourites as (select tea_id,
+								   user_id,
+								   true as is_favourite
+							from users_favourite_teas
+							where user_id = :user_id)
+		select t.id,
+			   t.name,
+			   t.serve_price,
+			   t.weight_price,
+			   coalesce(t.description, '')              as description,
+			   t.created_at,
+			   t.updated_at,
+			   t.is_deleted,
+			   t.category_id,
+			   coalesce(e.rating, 0)                    as rating,
+			   coalesce(favourites.is_favourite, false) as is_favourite
 		from teas t
-		    left join evaluations e on t.id = e.tea_id`
+				 left join evaluations e on t.id = e.tea_id
+				 left join favourites on t.id = favourites.tea_id`
 		userStmt := "(e.user_id = :user_id or rating is null)"
 		filterStatements = append(filterStatements, userStmt)
 	} else {
@@ -210,6 +236,11 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 	if !filters.IsDeleted {
 		isDeletedStmt := "t.is_deleted is false"
 		filterStatements = append(filterStatements, isDeletedStmt)
+	}
+
+	if filters.IsFavourite && filters.UserId != uuid.Nil {
+		isFavouriteStmt := "is_favourite is true"
+		filterStatements = append(filterStatements, isFavouriteStmt)
 	}
 
 	if len(filterStatements) > 0 {
