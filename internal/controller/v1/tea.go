@@ -106,7 +106,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 //	@Router		/api/v1/teas [get]
 //	@Security	BearerAuth
 func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
-	filters := &teaSchemas.Filters{}
+	filters := teaSchemas.NewFilters()
 
 	if err := filters.Validate(r); err != nil {
 		errorResponse := errx.NewBadRequestError(err)

@@ -123,7 +123,7 @@ func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, 
 							where user_id = :user_id)
 		select count(*)
 		from teas t
-				 join favourites on t.id = favourites.tea_id`
+				 left join favourites on t.id = favourites.tea_id`
 	} else {
 		countQuery = "select count(*) from teas t"
 	}
@@ -216,9 +216,8 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 	}
 
 	if filters.Name != "" {
-		nameStmt := "lower(t.name) like lower(:name)"
-		filters.Name = fmt.Sprintf("%%%s%%", filters.Name)
-		filterStatements = append(filterStatements, nameStmt)
+		similarityStmt := `(lower(t.name) % lower(:name) and similarity(lower(t.name), lower(:name)) > :name_similarity)`
+		filterStatements = append(filterStatements, similarityStmt)
 	}
 
 	if len(filters.Tags) > 0 {

@@ -9,19 +9,25 @@ import (
 )
 
 type Filters struct {
-	Limit         uint64       `json:"limit" db:"limit"`
-	Page          uint64       `json:"page"`
-	Offset        uint64       `db:"offset"`
-	CategoryId    uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
-	Name          string       `json:"name,omitempty" db:"name"`
-	Tags          []string     `json:"tags,omitempty" db:"tags"`
-	MinServePrice float64      `json:"minServePrice,omitempty" db:"min_serve_price"`
-	MaxServePrice float64      `json:"maxServePrice,omitempty" db:"max_serve_price"`
-	SortBy        SortByFilter `json:"sortBy,omitempty"`
-	IsAsc         bool         `json:"isAsc"`
-	IsDeleted     bool         `json:"isDeleted,omitempty" db:"is_deleted"`
-	UserId        uuid.UUID    `db:"user_id"`
-	IsFavourite   bool         `json:"isFavourite,omitempty"`
+	Limit          uint64       `json:"limit" db:"limit"`
+	Page           uint64       `json:"page"`
+	Offset         uint64       `db:"offset"`
+	CategoryId     uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
+	Name           string       `json:"name,omitempty" db:"name"`
+	NameSimilarity float64      `db:"name_similarity"`
+	Tags           []string     `json:"tags,omitempty" db:"tags"`
+	MinServePrice  float64      `json:"minServePrice,omitempty" db:"min_serve_price"`
+	MaxServePrice  float64      `json:"maxServePrice,omitempty" db:"max_serve_price"`
+	SortBy         SortByFilter `json:"sortBy,omitempty"`
+	IsAsc          bool         `json:"isAsc"`
+	IsDeleted      bool         `json:"isDeleted,omitempty" db:"is_deleted"`
+	UserId         uuid.UUID    `db:"user_id"`
+	IsFavourite    bool         `json:"isFavourite,omitempty"`
+}
+
+func NewFilters() *Filters {
+	nameSimilarity := 0.2
+	return &Filters{NameSimilarity: nameSimilarity}
 }
 
 type SortByFilter string

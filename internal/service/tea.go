@@ -78,6 +78,10 @@ func (s *TeaService) GetAllTeas(filters *teaSchemas.Filters) ([]entity.TeaWithRa
 		return nil, 0, err
 	}
 
+	if total == 0 || len(allTeas) == 0 {
+		return allTeas, 0, nil
+	}
+
 	teaIds := make([]uuid.UUID, len(allTeas))
 	for i := range allTeas {
 		teaIds[i] = allTeas[i].Id
