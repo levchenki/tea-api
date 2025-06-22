@@ -1,4 +1,10 @@
 drop index if exists idx_teas_name_tgrm;
 
-alter database tea_api_db reset pg_trgm.similarity_threshold;
+DO
+$$
+    BEGIN
+        EXECUTE format('ALTER DATABASE %I reset pg_trgm.similarity_threshold;', current_database());
+    END
+$$;
+
 drop extension if exists pg_trgm;

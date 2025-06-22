@@ -151,7 +151,7 @@ func (tf *Filters) Validate(r *http.Request) error {
 	}
 	tf.IsDeleted = isDeleted
 
-	IsFavourite, err := strconv.ParseBool(query.Get("IsFavourite"))
+	IsFavourite, err := strconv.ParseBool(query.Get("isFavourite"))
 	if err != nil {
 		IsFavourite = false
 	}

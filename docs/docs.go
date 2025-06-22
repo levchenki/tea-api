@@ -767,7 +767,7 @@ const docTemplate = `{
                     {
                         "type": "boolean",
                         "description": "Is favourite",
-                        "name": "IsFavourite",
+                        "name": "isFavourite",
                         "in": "query"
                     }
                 ],

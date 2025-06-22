@@ -553,7 +553,7 @@ func (r *TeaRepository) ExistsByCategoryId(categoryId uuid.UUID) (bool, error) {
 func (r *TeaRepository) GetMinServePrice() (float64, error) {
 	var minPrice float64
 
-	err := r.db.Get(&minPrice, "select min(serve_price) from teas")
+	err := r.db.Get(&minPrice, "select coalesce(min(t.serve_price), 0) from teas t")
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
@@ -566,7 +566,7 @@ func (r *TeaRepository) GetMinServePrice() (float64, error) {
 func (r *TeaRepository) GetMaxServePrice() (float64, error) {
 	var maxPrice float64
 
-	err := r.db.Get(&maxPrice, "select max(teas.serve_price) from teas")
+	err := r.db.Get(&maxPrice, "select coalesce(max(t.serve_price), 0) from teas t")
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, nil
