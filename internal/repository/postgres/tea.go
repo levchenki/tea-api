@@ -160,7 +160,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			   coalesce(e.rating, 0)                    as rating,
 			   coalesce(favourites.is_favourite, false) as is_favourite
 		from teas t
-				 left join evaluations e on t.id = e.tea_id
+				 left join evaluations e on t.id = e.tea_id and user_id = :user_id
 				 left join favourites on t.id = favourites.tea_id`
 		userStmt := "(e.user_id = :user_id or rating is null)"
 		filterStatements = append(filterStatements, userStmt)
