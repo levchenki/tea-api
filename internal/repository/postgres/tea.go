@@ -121,11 +121,11 @@ func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, 
 								   true as is_favourite
 							from users_favourite_teas
 							where user_id = :user_id)
-		select count(*)
+		select count(distinct t.id)
 		from teas t
 				 left join favourites on t.id = favourites.tea_id`
 	} else {
-		countQuery = "select count(*) from teas t"
+		countQuery = "select count(distinct t.id) from teas t"
 	}
 	countQuery, whereClause := r.selectAllWhereClause(countQuery, filters)
 	countQuery += whereClause
@@ -148,17 +148,17 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 								   true as is_favourite
 							from users_favourite_teas
 							where user_id = :user_id)
-		select t.id,
-			   t.name,
-			   t.serve_price,
-			   t.weight_price,
-			   coalesce(t.description, '')              as description,
-			   t.created_at,
-			   t.updated_at,
-			   t.is_deleted,
-			   t.category_id,
-			   coalesce(e.rating, 0)                    as rating,
-			   coalesce(favourites.is_favourite, false) as is_favourite
+		select distinct t.id,
+						t.name,
+						t.serve_price,
+						t.weight_price,
+						coalesce(t.description, '')              as description,
+						t.created_at,
+						t.updated_at,
+						t.is_deleted,
+						t.category_id,
+						coalesce(e.rating, 0)                    as rating,
+						coalesce(favourites.is_favourite, false) as is_favourite
 		from teas t
 				 left join evaluations e on t.id = e.tea_id and user_id = :user_id
 				 left join favourites on t.id = favourites.tea_id`
@@ -166,7 +166,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 		filterStatements = append(filterStatements, userStmt)
 	} else {
 		getAllQuery = `
-		select 
+		select distinct 
 			t.id,
 			t.name,
 			t.serve_price,
