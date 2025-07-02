@@ -8,3 +8,6 @@ $$
 $$;
 
 drop extension if exists pg_trgm;
+
+alter table teas
+    rename column is_hidden to is_deleted;

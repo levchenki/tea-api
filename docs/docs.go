@@ -760,14 +760,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Is deleted",
-                        "name": "isDeleted",
+                        "description": "Is only hidden",
+                        "name": "isOnlyHidden",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
-                        "description": "Is favourite",
-                        "name": "isFavourite",
+                        "description": "Is only favourite",
+                        "name": "isOnlyFavourite",
                         "in": "query"
                     }
                 ],
@@ -1341,7 +1341,7 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "isDeleted": {
+                "isHidden": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1373,7 +1373,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDeleted": {
+                "isHidden": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1408,10 +1408,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDeleted": {
+                "isFavourite": {
                     "type": "boolean"
                 },
-                "isFavourite": {
+                "isHidden": {
                     "type": "boolean"
                 },
                 "name": {

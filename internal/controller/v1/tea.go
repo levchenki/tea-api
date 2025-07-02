@@ -98,8 +98,8 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 //	@Param		isAsc			query		bool					false	"Sort order"
 //	@Param		sortBy			query		teaSchemas.SortByFilter	false	"Sort by field (name, servePrice, rating)"
 //	@Param		servePrice[]	query		[]float64				false	"ServePrice range"
-//	@Param		isDeleted		query		bool					false	"Is deleted"
-//	@Param		isFavourite		query		bool					false	"Is favourite"
+//	@Param		isOnlyHidden	query		bool					false	"Is only hidden"
+//	@Param		isOnlyFavourite	query		bool					false	"Is only favourite"
 //	@Success	200				{object}	schemas.PaginatedResult[teaSchemas.WithRatingResponseModel]
 //	@Failure	400				{object}	errx.AppError
 //	@Failure	500				{object}	errx.AppError

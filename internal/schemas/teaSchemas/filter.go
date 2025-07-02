@@ -9,20 +9,20 @@ import (
 )
 
 type Filters struct {
-	Limit          uint64       `json:"limit" db:"limit"`
-	Page           uint64       `json:"page"`
-	Offset         uint64       `db:"offset"`
-	CategoryId     uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
-	Name           string       `json:"name,omitempty" db:"name"`
-	NameSimilarity float64      `db:"name_similarity"`
-	Tags           []string     `json:"tags,omitempty" db:"tags"`
-	MinServePrice  float64      `json:"minServePrice,omitempty" db:"min_serve_price"`
-	MaxServePrice  float64      `json:"maxServePrice,omitempty" db:"max_serve_price"`
-	SortBy         SortByFilter `json:"sortBy,omitempty"`
-	IsAsc          bool         `json:"isAsc"`
-	IsDeleted      bool         `json:"isDeleted,omitempty" db:"is_deleted"`
-	UserId         uuid.UUID    `db:"user_id"`
-	IsFavourite    bool         `json:"isFavourite,omitempty"`
+	Limit           uint64       `json:"limit" db:"limit"`
+	Page            uint64       `json:"page"`
+	Offset          uint64       `db:"offset"`
+	CategoryId      uuid.UUID    `json:"categoryId,omitempty" db:"category_id"`
+	Name            string       `json:"name,omitempty" db:"name"`
+	NameSimilarity  float64      `db:"name_similarity"`
+	Tags            []string     `json:"tags,omitempty" db:"tags"`
+	MinServePrice   float64      `json:"minServePrice,omitempty" db:"min_serve_price"`
+	MaxServePrice   float64      `json:"maxServePrice,omitempty" db:"max_serve_price"`
+	SortBy          SortByFilter `json:"sortBy,omitempty"`
+	IsAsc           bool         `json:"isAsc"`
+	IsOnlyHidden    bool         `json:"isOnlyHidden,omitempty" db:"is_hidden"`
+	UserId          uuid.UUID    `db:"user_id"`
+	IsOnlyFavourite bool         `json:"isOnlyFavourite,omitempty"`
 }
 
 func NewFilters() *Filters {
@@ -145,17 +145,17 @@ func (tf *Filters) Validate(r *http.Request) error {
 		tf.MaxServePrice = prices[1]
 	}
 
-	isDeleted, err := strconv.ParseBool(query.Get("isDeleted"))
+	isOnlyHidden, err := strconv.ParseBool(query.Get("isOnlyHidden"))
 	if err != nil {
-		isDeleted = false
+		isOnlyHidden = false
 	}
-	tf.IsDeleted = isDeleted
+	tf.IsOnlyHidden = isOnlyHidden
 
-	IsFavourite, err := strconv.ParseBool(query.Get("isFavourite"))
+	isOnlyFavourite, err := strconv.ParseBool(query.Get("isOnlyFavourite"))
 	if err != nil {
-		IsFavourite = false
+		isOnlyFavourite = false
 	}
-	tf.IsFavourite = IsFavourite
+	tf.IsOnlyFavourite = isOnlyFavourite
 
 	return nil
 }

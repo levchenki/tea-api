@@ -32,7 +32,7 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 			coalesce(description, '') as description,
 			t.created_at,
 			t.updated_at,
-			is_deleted,
+			is_hidden,
 			category_id,
 			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
 		from teas t
@@ -64,7 +64,7 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 			   coalesce(description, '')                                              as description,
 			   t.created_at,
 			   t.updated_at,
-			   is_deleted,
+			   is_hidden,
 			   category_id,
 			   coalesce(rating, 0)                                                    as rating,
 			   coalesce(note, '')                                                     as note,
@@ -152,13 +152,15 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 						t.name,
 						t.serve_price,
 						t.weight_price,
-						coalesce(t.description, '')              as description,
+						coalesce(t.description, '')                                            as description,
 						t.created_at,
 						t.updated_at,
-						t.is_deleted,
+						t.is_hidden,
 						t.category_id,
-						coalesce(e.rating, 0)                    as rating,
-						coalesce(favourites.is_favourite, false) as is_favourite
+						coalesce(e.rating, 0)                                                  as rating,
+						coalesce(e.note, '')                                                   as note,
+						coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,
+						coalesce(favourites.is_favourite, false)                               as is_favourite
 		from teas t
 				 left join evaluations e on t.id = e.tea_id and user_id = :user_id
 				 left join favourites on t.id = favourites.tea_id`
@@ -174,8 +176,9 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			coalesce(t.description, '') as description,
 			t.created_at,
 			t.updated_at,
-			t.is_deleted,
-			t.category_id
+			t.is_hidden,
+			t.category_id,
+			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
 		from teas t`
 	}
 
@@ -232,12 +235,15 @@ func (r *TeaRepository) selectAllWhereClause(getQuery string, filters *teaSchema
 		filterStatements = append(filterStatements, servePriceStmt)
 	}
 
-	if !filters.IsDeleted {
-		isDeletedStmt := "t.is_deleted is false"
-		filterStatements = append(filterStatements, isDeletedStmt)
+	if filters.IsOnlyHidden {
+		isHiddenStmt := "t.is_hidden is true"
+		filterStatements = append(filterStatements, isHiddenStmt)
+	} else {
+		isHiddenStmt := "t.is_hidden is false"
+		filterStatements = append(filterStatements, isHiddenStmt)
 	}
 
-	if filters.IsFavourite && filters.UserId != uuid.Nil {
+	if filters.IsOnlyFavourite && filters.UserId != uuid.Nil {
 		isFavouriteStmt := "is_favourite is true"
 		filterStatements = append(filterStatements, isFavouriteStmt)
 	}
@@ -428,7 +434,7 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 		WeightPrice: inputTea.WeightPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
-		IsDeleted:   inputTea.IsDeleted,
+		IsHidden:    inputTea.IsHidden,
 	}
 
 	rows, err := tx.NamedQuery(`
@@ -439,7 +445,7 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 			description=:description,
 			updated_at=now(),
 			category_id=:category_id,
-			is_deleted=:is_deleted
+			is_hidden=:is_hidden
 			where id = :id
 		returning teas.*
 		`, tea)
@@ -467,6 +473,16 @@ func (r *TeaRepository) Delete(id uuid.UUID) error {
 	}
 
 	_, err = tx.Exec("delete from teas_tags where tea_id = $1", id)
+
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+
+	_, err = tx.Exec("delete from evaluations where tea_id = $1", id)
 
 	if err != nil {
 		errRollback := tx.Rollback()

@@ -13,7 +13,7 @@ type Tea struct {
 	Description string    `db:"description" json:"description"`
 	CreatedAt   time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at" json:"updatedAt"`
-	IsDeleted   bool      `db:"is_deleted" json:"isDeleted"`
+	IsHidden    bool      `db:"is_hidden" json:"isHidden"`
 	CategoryId  uuid.UUID `db:"category_id" json:"categoryId"`
 
 	Tags []Tag `json:"tags,omitempty"`

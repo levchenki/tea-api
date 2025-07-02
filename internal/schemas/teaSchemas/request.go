@@ -13,7 +13,7 @@ type RequestModel struct {
 	Description string      `json:"description"`
 	CategoryId  uuid.UUID   `json:"categoryId"`
 	TagIds      []uuid.UUID `json:"tagIds,omitempty"`
-	IsDeleted   bool        `json:"isDeleted,omitempty"`
+	IsHidden    bool        `json:"isHidden,omitempty"`
 }
 
 func (tr *RequestModel) Bind(r *http.Request) error {

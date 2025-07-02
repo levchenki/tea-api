@@ -13,7 +13,7 @@ type ResponseModel struct {
 	Description *string      `json:"description"`
 	CategoryId  uuid.UUID    `json:"categoryId"`
 	Tags        []entity.Tag `json:"tags,omitempty"`
-	IsDeleted   bool         `json:"isDeleted,omitempty"`
+	IsHidden    bool         `json:"isHidden,omitempty"`
 }
 
 func NewTeaResponseModel(tea *entity.Tea) *ResponseModel {
@@ -28,8 +28,8 @@ func NewTeaResponseModel(tea *entity.Tea) *ResponseModel {
 	if tea.Tags != nil || len(tea.Tags) > 0 {
 		r.Tags = tea.Tags
 	}
-	if tea.IsDeleted {
-		r.IsDeleted = tea.IsDeleted
+	if tea.IsHidden {
+		r.IsHidden = tea.IsHidden
 	}
 	return r
 }
@@ -67,8 +67,8 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 	if tea.Note != "" {
 		t.Note = tea.Note
 	}
-	if tea.IsDeleted {
-		t.IsDeleted = tea.IsDeleted
+	if tea.IsHidden {
+		t.IsHidden = tea.IsHidden
 	}
 	if tea.IsFavourite {
 		t.IsFavourite = tea.IsFavourite
