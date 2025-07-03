@@ -472,23 +472,18 @@ func (r *TeaRepository) Delete(id uuid.UUID) error {
 		return err
 	}
 
-	_, err = tx.Exec("delete from teas_tags where tea_id = $1", id)
-
+	err = r.deleteTeaTags(tx, id)
 	if err != nil {
-		errRollback := tx.Rollback()
-		if errRollback != nil {
-			return errRollback
-		}
 		return err
 	}
 
-	_, err = tx.Exec("delete from evaluations where tea_id = $1", id)
-
+	err = r.deleteEvaluations(tx, id)
 	if err != nil {
-		errRollback := tx.Rollback()
-		if errRollback != nil {
-			return errRollback
-		}
+		return err
+	}
+
+	err = r.deleteFavourite(tx, id)
+	if err != nil {
 		return err
 	}
 
@@ -503,6 +498,45 @@ func (r *TeaRepository) Delete(id uuid.UUID) error {
 
 	err = tx.Commit()
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) deleteTeaTags(tx *sqlx.Tx, teaId uuid.UUID) error {
+	_, err := tx.Exec("delete from teas_tags where tea_id = $1", teaId)
+
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) deleteEvaluations(tx *sqlx.Tx, teaId uuid.UUID) error {
+	_, err := tx.Exec("delete from evaluations where tea_id = $1", teaId)
+
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) deleteFavourite(tx *sqlx.Tx, teaId uuid.UUID) error {
+	_, err := tx.Exec("delete from users_favourite_teas where tea_id = $1", teaId)
+
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
 		return err
 	}
 	return nil
