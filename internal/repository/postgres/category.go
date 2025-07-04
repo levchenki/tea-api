@@ -20,7 +20,8 @@ func NewCategoryRepository(db *sqlx.DB) *CategoryRepository {
 
 func (r *CategoryRepository) GetById(id uuid.UUID) (*entity.Category, error) {
 	category := &entity.Category{}
-	err := r.db.Get(category, "select * from categories where id = $1", id)
+	err := r.db.Get(category,
+		"select id, name, coalesce(description, '') as description from categories where id = $1", id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -32,7 +33,8 @@ func (r *CategoryRepository) GetById(id uuid.UUID) (*entity.Category, error) {
 
 func (r *CategoryRepository) GetAll() ([]entity.Category, error) {
 	categories := make([]entity.Category, 0)
-	err := r.db.Select(&categories, "select * from categories")
+	err := r.db.Select(&categories,
+		"select id, name, coalesce(description, '') as description from categories")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +50,7 @@ func (r *CategoryRepository) Create(category *entity.Category) (*entity.Category
 	rows, err := tx.NamedQuery(`
 	insert into categories (name, description)
 	values (:name, :description)
-	returning categories.id, categories.name, categories.description
+	returning categories.id, categories.name, coalesce(categories.description, '') as description
 	`, &category)
 	if err != nil {
 		errRollback := tx.Rollback()
