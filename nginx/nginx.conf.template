@@ -8,12 +8,21 @@ http {
     server {
         listen 80;
 
+        return 301 https://${APP_DOMAIN}$request_uri;
+    }
+
+    server {
+        listen 443 ssl;
+
+        ssl_certificate /etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${APP_DOMAIN}/privkey.pem;
+
         location / {
-            proxy_pass http://client:80/;
+            proxy_pass http://frontend:80/;
         }
 
         location /api/ {
-            proxy_pass http://backend:${SERVER_PORT}/;
+            proxy_pass http://backend:${SERVER_PORT}/api/;
         }
     }
 }
