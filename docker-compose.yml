@@ -39,18 +39,19 @@ services:
       - "443:443"
     volumes:
       - './nginx/nginx.conf.template:/etc/nginx/nginx.conf.template'
+      - '/etc/letsencrypt:/etc/letsencrypt:ro'
     env_file:
       - ./.env
     depends_on:
       - backend
-      - client
+    #      - frontend
     command: /bin/sh -c "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 
-
-  client:
-    container_name: "client"
+  frontend:
+    container_name: "frontend"
     build:
-      context: ../tea-client
+      context: ../tea-frontend
       dockerfile: Dockerfile
-    env_file:
-      - ./.env
+      args:
+        VITE_TELEGRAM_BOT_ID: ${VITE_TELEGRAM_BOT_ID}
+        VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
