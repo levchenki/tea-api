@@ -93,7 +93,7 @@ func (r *CategoryRepository) Update(category *entity.Category) (*entity.Category
 		set name=:name,
 			description=:description
 		where id = :id
-		returning categories.*
+		returning categories.id, categories.name, coalesce(categories.description, '') as description
 		`, category)
 	if err != nil {
 		errRollback := tx.Rollback()
