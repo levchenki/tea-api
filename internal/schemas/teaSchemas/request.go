@@ -10,7 +10,7 @@ type RequestModel struct {
 	Name        string      `json:"name"`
 	ServePrice  float64     `json:"servePrice"`
 	WeightPrice float64     `json:"weightPrice"`
-	Description string      `json:"description"`
+	Description string      `json:"description,omitempty"`
 	CategoryId  uuid.UUID   `json:"categoryId"`
 	TagIds      []uuid.UUID `json:"tagIds,omitempty"`
 	IsHidden    bool        `json:"isHidden,omitempty"`

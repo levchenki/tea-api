@@ -282,6 +282,7 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 		WeightPrice: inputTea.WeightPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
+		IsHidden:    inputTea.IsHidden,
 	}
 	createdTea, err := r.insertTea(tea, tx)
 
@@ -315,9 +316,9 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 func (r *TeaRepository) insertTea(inputTea *entity.Tea, tx *sqlx.Tx) (*entity.Tea, error) {
 	createdTea := &entity.Tea{}
 	rows, err := tx.NamedQuery(`
-		insert into teas (name, serve_price, weight_price, description, category_id)
-		values (:name, :serve_price, :weight_price, :description, :category_id)
-		returning teas.*`, inputTea)
+		insert into teas (name, serve_price, weight_price, description, category_id, is_hidden)
+		values (:name, :serve_price, :weight_price, nullif(:description, ''), :category_id, :is_hidden)
+		returning id, name, serve_price, weight_price, coalesce(description, '') as description, category_id, is_hidden`, inputTea)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +448,7 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 			category_id=:category_id,
 			is_hidden=:is_hidden
 			where id = :id
-		returning teas.*
+		returning id, name, serve_price, weight_price, coalesce(description, '') as description, category_id, is_hidden
 		`, tea)
 
 	if err != nil {
