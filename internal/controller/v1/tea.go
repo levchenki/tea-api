@@ -9,7 +9,6 @@ import (
 	"github.com/levchenki/tea-api/internal/entity"
 	"github.com/levchenki/tea-api/internal/errx"
 	"github.com/levchenki/tea-api/internal/logx"
-	"github.com/levchenki/tea-api/internal/schemas"
 	"github.com/levchenki/tea-api/internal/schemas/teaSchemas"
 	"github.com/levchenki/tea-api/internal/schemas/userSchemas"
 	"net/http"
@@ -25,7 +24,7 @@ type TeaService interface {
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
 	ToggleFavourites(id uuid.UUID, userId uuid.UUID, isFavourite bool) error
 
-	GetMinMaxServePrices() (float64, float64, error)
+	GetMinMaxServePrices(filters *teaSchemas.Filters) (float64, float64, error)
 }
 
 type TeaController struct {
@@ -100,7 +99,7 @@ func (c *TeaController) GetTeaById(w http.ResponseWriter, r *http.Request) {
 //	@Param		servePrice[]	query		[]float64				false	"ServePrice range"
 //	@Param		isOnlyHidden	query		bool					false	"Is only hidden"
 //	@Param		isOnlyFavourite	query		bool					false	"Is only favourite"
-//	@Success	200				{object}	schemas.PaginatedResult[teaSchemas.WithRatingResponseModel]
+//	@Success	200				{object}	teaSchemas.TeaPricesPaginatedResult[teaSchemas.WithRatingResponseModel]
 //	@Failure	400				{object}	errx.AppError
 //	@Failure	500				{object}	errx.AppError
 //	@Router		/api/v1/teas [get]
@@ -126,15 +125,22 @@ func (c *TeaController) GetAllTeas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	minPrice, maxPrice, err := c.teaService.GetMinMaxServePrices(filters)
+	if err != nil {
+		handleError(w, r, c.log, err)
+		return
+	}
+
 	teaResponse := make([]*teaSchemas.WithRatingResponseModel, len(teas))
 	for i := range teas {
 		teaResponse[i] = teaSchemas.NewTeaWithRatingResponseModel(&teas[i])
 	}
 
-	response := &schemas.PaginatedResult[*teaSchemas.WithRatingResponseModel]{
-		Items: teaResponse,
-		Total: total,
-	}
+	response := teaSchemas.NewTeaPricesPaginatedResult(teaResponse,
+		total,
+		minPrice,
+		maxPrice,
+	)
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, response)
@@ -299,30 +305,6 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, teaSchemas.NewTeaWithRatingResponseModel(evaluatedTea))
-}
-
-// GetMinMaxServePrices godoc
-//
-//	@Summary	Get min and max serve prices
-//	@Tags		Tea
-//	@Accept		json
-//	@Produce	json
-//	@Success	200	{object}	teaSchemas.MinMaxPricesResponseModel
-//	@Failure	400	{object}	errx.AppError
-//	@Failure	401	{object}	errx.AppError
-//	@Failure	404	{object}	errx.AppError
-//	@Failure	500	{object}	errx.AppError
-//	@Router		/api/v1/teas/prices [get]
-func (c *TeaController) GetMinMaxServePrices(w http.ResponseWriter, r *http.Request) {
-	minPrice, maxPrice, err := c.teaService.GetMinMaxServePrices()
-	if err != nil {
-		handleError(w, r, c.log, err)
-		return
-	}
-
-	response := teaSchemas.NewMinMaxPrices(minPrice, maxPrice)
-	render.Status(r, http.StatusOK)
-	render.JSON(w, r, response)
 }
 
 // ToggleFavourites godoc

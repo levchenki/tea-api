@@ -137,6 +137,38 @@ func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, 
 	return countQuery, args, nil
 }
 
+func (r *TeaRepository) prepareMinMaxQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
+	var minMaxQuery string
+	isNotEmptyUser := filters.UserId != uuid.Nil
+	if isNotEmptyUser {
+		minMaxQuery = `
+		with favourites as (select tea_id,
+								   user_id,
+								   true as is_favourite
+							from users_favourite_teas
+							where user_id = :user_id)
+		select
+			coalesce(min(t.serve_price), 0) as minServePrice,
+			coalesce(max(t.serve_price), 0) as maxServePrice
+		from teas t
+			 left join favourites on t.id = favourites.tea_id`
+	} else {
+		minMaxQuery = `
+			select
+			    coalesce(min(t.serve_price), 0) as min,
+			    coalesce(max(t.serve_price), 0) as max
+			from teas t`
+	}
+	minMaxQuery, whereClause := r.selectAllWhereClause(minMaxQuery, filters)
+	minMaxQuery += whereClause
+
+	minMaxQuery, args, err := r.bindParams(minMaxQuery, filters)
+	if err != nil {
+		return "", nil, err
+	}
+	return minMaxQuery, args, nil
+}
+
 func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
 	filterStatements := make([]string, 0, 10)
 	var getAllQuery string
@@ -601,30 +633,22 @@ func (r *TeaRepository) ExistsByCategoryId(categoryId uuid.UUID) (bool, error) {
 	return exists, nil
 }
 
-func (r *TeaRepository) GetMinServePrice() (float64, error) {
-	var minPrice float64
+func (r *TeaRepository) GetMinMaxServePrices(filters *teaSchemas.Filters) (float64, float64, error) {
+	query, args, err := r.prepareMinMaxQuery(filters)
+	if err != nil {
+		return 0, 0, err
+	}
 
-	err := r.db.Get(&minPrice, "select coalesce(min(t.serve_price), 0) from teas t")
+	var minServePrice, maxServePrice float64
+	err = r.db.QueryRow(query, args...).Scan(&minServePrice, &maxServePrice)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
+			return 0, 0, nil
 		}
-		return 0, err
+		return 0, 0, err
 	}
-	return minPrice, nil
-}
 
-func (r *TeaRepository) GetMaxServePrice() (float64, error) {
-	var maxPrice float64
-
-	err := r.db.Get(&maxPrice, "select coalesce(max(t.serve_price), 0) from teas t")
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
-		}
-		return 0, err
-	}
-	return maxPrice, nil
+	return minServePrice, maxServePrice, nil
 }
 
 func (r *TeaRepository) SetFavourite(id, userId uuid.UUID) error {

@@ -775,7 +775,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas.PaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel"
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.TeaPricesPaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel"
                         }
                     },
                     "400": {
@@ -840,52 +840,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/teas/prices": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Tea"
-                ],
-                "summary": "Get min and max serve prices",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.MinMaxPricesResponseModel"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
                         }
@@ -1246,20 +1200,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_levchenki_tea-api_internal_schemas.PaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_levchenki_tea-api_internal_schemas_categorySchemas.RequestModel": {
             "type": "object",
             "properties": {
@@ -1317,17 +1257,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "rating": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.MinMaxPricesResponseModel": {
-            "type": "object",
-            "properties": {
-                "maxServePrice": {
-                    "type": "number"
-                },
-                "minServePrice": {
                     "type": "number"
                 }
             }
@@ -1390,6 +1319,26 @@ const docTemplate = `{
                 },
                 "weightPrice": {
                     "type": "number"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_teaSchemas.TeaPricesPaginatedResult-github_com_levchenki_tea-api_internal_schemas_teaSchemas_WithRatingResponseModel": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_teaSchemas.WithRatingResponseModel"
+                    }
+                },
+                "maxServePrice": {
+                    "type": "number"
+                },
+                "minServePrice": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

@@ -41,9 +41,6 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	})
 
 	r.Route("/teas", func(r chi.Router) {
-
-		r.Get("/prices", teaControllerV1.GetMinMaxServePrices)
-
 		r.Group(func(r chi.Router) {
 			r.Use(authControllerV1.AuthMiddleware(false))
 			r.Get("/", teaControllerV1.GetAllTeas)

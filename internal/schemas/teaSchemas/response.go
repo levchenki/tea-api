@@ -3,6 +3,7 @@ package teaSchemas
 import (
 	"github.com/google/uuid"
 	"github.com/levchenki/tea-api/internal/entity"
+	"github.com/levchenki/tea-api/internal/schemas"
 )
 
 type ResponseModel struct {
@@ -88,5 +89,23 @@ func NewMinMaxPrices(min, max float64) *MinMaxPricesResponseModel {
 	return &MinMaxPricesResponseModel{
 		MinServePrice: min,
 		MaxServePrice: max,
+	}
+}
+
+type TeaPricesPaginatedResult[T any] struct {
+	schemas.PaginatedResult[T]
+	MinMaxPricesResponseModel
+}
+
+func NewTeaPricesPaginatedResult[T any](teaResponse []T, total uint64, min, max float64) *TeaPricesPaginatedResult[T] {
+	return &TeaPricesPaginatedResult[T]{
+		PaginatedResult: schemas.PaginatedResult[T]{
+			Items: teaResponse,
+			Total: total,
+		},
+		MinMaxPricesResponseModel: MinMaxPricesResponseModel{
+			MinServePrice: min,
+			MaxServePrice: max,
+		},
 	}
 }
