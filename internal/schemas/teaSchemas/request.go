@@ -9,7 +9,7 @@ import (
 type RequestModel struct {
 	Name        string      `json:"name"`
 	ServePrice  float64     `json:"servePrice"`
-	WeightPrice float64     `json:"weightPrice"`
+	UnitPrice   float64     `json:"unitPrice"`
 	Description string      `json:"description,omitempty"`
 	CategoryId  uuid.UUID   `json:"categoryId"`
 	TagIds      []uuid.UUID `json:"tagIds,omitempty"`

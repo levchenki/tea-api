@@ -15,15 +15,18 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	tagRepository := postgres.NewTagRepository(db)
 	userRepository := postgres.NewUserRepository(db)
 	categoryRepository := postgres.NewCategoryRepository(db)
+	unitRepository := postgres.NewUnitRepository(db)
 
 	teaService := service.NewTeaService(teaRepository, tagRepository)
 	userService := service.NewUserService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
 	tagService := service.NewTagService(tagRepository)
+	unitService := service.NewUnitService(unitRepository)
 
 	teaControllerV1 := v1.NewTeaController(teaService, log)
 	categoryControllerV1 := v1.NewCategoryController(categoryService, log)
 	tagControllerV1 := v1.NewTagController(tagService, log)
+	unitControllerV1 := v1.NewUnitController(unitService, log)
 
 	authControllerV1 := v1.NewUserController(
 		cfg.JWTSecretKey,
@@ -59,7 +62,16 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 				r.Put("/{id}", teaControllerV1.UpdateTea)
 			})
 		})
+
+		r.Route("/units", func(r chi.Router) {
+			r.Get("/", unitControllerV1.GetAllUnits)
+			r.Get("/weights", unitControllerV1.GetAllWeights)
+			r.Post("/", unitControllerV1.CreateUnit)
+			r.Delete("/{id}", unitControllerV1.DeleteUnit)
+			r.Put("/{id}", unitControllerV1.UpdateUnit)
+		})
 	})
+
 	r.Route("/categories", func(r chi.Router) {
 		r.Get("/{id}", categoryControllerV1.GetCategoryById)
 		r.Get("/", categoryControllerV1.GetAllCategories)

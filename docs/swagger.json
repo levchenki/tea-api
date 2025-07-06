@@ -845,6 +845,210 @@
                 }
             }
         },
+        "/api/v1/teas/units": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Return all units",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_unitSchemas.ResponseModel"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Create unit",
+                "parameters": [
+                    {
+                        "description": "Unit",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_unitSchemas.RequestModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_unitSchemas.ResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/teas/units/weights": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Return all weights",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/teas/units/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Update unit",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unit",
+                        "name": "unit",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_unitSchemas.RequestModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_schemas_unitSchemas.ResponseModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Delete unit",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_levchenki_tea-api_internal_errx.AppError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/teas/{id}": {
             "get": {
                 "security": [
@@ -1277,7 +1481,7 @@
                         "type": "string"
                     }
                 },
-                "weightPrice": {
+                "unitPrice": {
                     "type": "number"
                 }
             }
@@ -1309,7 +1513,7 @@
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 },
-                "weightPrice": {
+                "unitPrice": {
                     "type": "number"
                 }
             }
@@ -1374,8 +1578,39 @@
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
                 },
-                "weightPrice": {
+                "unitPrice": {
                     "type": "number"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_unitSchemas.RequestModel": {
+            "type": "object",
+            "properties": {
+                "isApiece": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "integer"
+                },
+                "weightUnit": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_levchenki_tea-api_internal_schemas_unitSchemas.ResponseModel": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "isApiece": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "integer"
+                },
+                "weightUnit": {
+                    "type": "string"
                 }
             }
         },
