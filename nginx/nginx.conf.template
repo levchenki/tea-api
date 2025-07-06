@@ -7,12 +7,14 @@ events {
 http {
     server {
         listen 80;
+        server_name ${APP_DOMAIN};
 
-        return 301 https://${APP_DOMAIN}$request_uri;
+        return 301 https://$host$request_uri;
     }
 
     server {
         listen 443 ssl;
+        server_name ${APP_DOMAIN};
 
         ssl_certificate /etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${APP_DOMAIN}/privkey.pem;

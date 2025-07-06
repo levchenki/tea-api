@@ -1,6 +1,6 @@
 services:
   backend:
-    container_name: "backend"
+    container_name: "tea-backend${APP_ENV:+-}${APP_ENV}"
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,9 +11,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - tea_network
 
   db:
-    container_name: "db"
+    container_name: "tea-db${APP_ENV:+-}${APP_ENV}"
     image: postgres:15-alpine
     ports:
       - "${DB_PORT}:5432"
@@ -30,28 +32,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-
-  nginx:
-    container_name: "nginx"
-    image: nginx:stable-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - './nginx/nginx.conf.template:/etc/nginx/nginx.conf.template'
-      - '/etc/letsencrypt:/etc/letsencrypt:ro'
-    env_file:
-      - ./.env
-    depends_on:
-      - backend
-    #      - frontend
-    command: /bin/sh -c "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    networks:
+      - tea_network
 
   frontend:
-    container_name: "frontend"
+    container_name: "tea-frontend${APP_ENV:+-}${APP_ENV}"
     build:
       context: ../tea-frontend
       dockerfile: Dockerfile
       args:
         VITE_TELEGRAM_BOT_ID: ${VITE_TELEGRAM_BOT_ID}
         VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
+    networks:
+      - tea_network
+
+networks:
+  tea_network:
+    external: true
+    name: tea_network${APP_ENV:+_}${APP_ENV}
