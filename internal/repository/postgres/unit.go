@@ -16,6 +16,21 @@ func NewUnitRepository(db *sqlx.DB) *UnitRepository {
 	}
 }
 
+func (r *UnitRepository) GetById(uuid2 uuid.UUID) (*entity.Unit, error) {
+	unit := &entity.Unit{}
+	err := r.db.Get(unit, `
+		select
+		    id,
+		    is_apiece,
+		    weight_unit,
+		    value 
+		from units where id = $1`, uuid2)
+	if err != nil {
+		return nil, err
+	}
+	return unit, nil
+}
+
 func (r *UnitRepository) GetAll() ([]entity.Unit, error) {
 	units := make([]entity.Unit, 0)
 	err := r.db.Select(&units,

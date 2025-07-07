@@ -30,18 +30,25 @@ type TeaTagRepository interface {
 	GetAllByTeaIds(teaIds []uuid.UUID) (map[uuid.UUID][]entity.Tag, error)
 }
 
+type TeaUnitRepository interface {
+	Exists(id uuid.UUID) (bool, error)
+}
+
 type TeaService struct {
-	teaRepository TeaRepository
-	tagRepository TeaTagRepository
+	teaRepository  TeaRepository
+	tagRepository  TeaTagRepository
+	unitRepository TeaUnitRepository
 }
 
 func NewTeaService(
 	teaRepository TeaRepository,
 	tagRepository TeaTagRepository,
+	unitRepository TeaUnitRepository,
 ) *TeaService {
 	return &TeaService{
-		teaRepository: teaRepository,
-		tagRepository: tagRepository,
+		teaRepository:  teaRepository,
+		tagRepository:  tagRepository,
+		unitRepository: unitRepository,
 	}
 }
 
@@ -109,6 +116,15 @@ func (s *TeaService) CreateTea(t *teaSchemas.RequestModel) (*entity.Tea, error) 
 		return nil, errx.NewBadRequestError(err)
 	}
 
+	existsUnit, err := s.unitRepository.Exists(t.UnitId)
+	if err != nil {
+		return nil, err
+	}
+	if existsUnit == false {
+		err := fmt.Errorf("unit with id %s is not found", t.UnitId.String())
+		return nil, errx.NewNotFoundError(err)
+	}
+
 	createdTea, err := s.teaRepository.Create(t)
 	if err != nil {
 		return nil, err
@@ -156,6 +172,15 @@ func (s *TeaService) UpdateTea(id uuid.UUID, t *teaSchemas.RequestModel) (*entit
 	if existsByName == true {
 		err := fmt.Errorf("tea with name %s has already existed", t.Name)
 		return nil, errx.NewBadRequestError(err)
+	}
+
+	existsUnit, err := s.unitRepository.Exists(t.UnitId)
+	if err != nil {
+		return nil, err
+	}
+	if existsUnit == false {
+		err := fmt.Errorf("unit with id %s is not found", t.UnitId.String())
+		return nil, errx.NewNotFoundError(err)
 	}
 
 	tags, err := s.tagRepository.GetByTeaId(id)

@@ -15,8 +15,8 @@ type Tea struct {
 	UpdatedAt   time.Time `db:"updated_at" json:"updatedAt"`
 	IsHidden    bool      `db:"is_hidden" json:"isHidden"`
 	CategoryId  uuid.UUID `db:"category_id" json:"categoryId"`
-
-	Tags []Tag `json:"tags,omitempty"`
+	UnitId      uuid.UUID `db:"unit_id" json:"unitId"`
+	Tags        []Tag     `json:"tags,omitempty"`
 }
 
 type TeaWithRating struct {

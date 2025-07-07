@@ -13,6 +13,7 @@ type ResponseModel struct {
 	UnitPrice   float64      `json:"unitPrice"`
 	Description *string      `json:"description,omitempty"`
 	CategoryId  uuid.UUID    `json:"categoryId"`
+	UnitId      uuid.UUID    `json:"unitId"`
 	Tags        []entity.Tag `json:"tags,omitempty"`
 	IsHidden    bool         `json:"isHidden,omitempty"`
 }
@@ -24,6 +25,7 @@ func NewTeaResponseModel(tea *entity.Tea) *ResponseModel {
 		ServePrice: tea.ServePrice,
 		UnitPrice:  tea.UnitPrice,
 		CategoryId: tea.CategoryId,
+		UnitId:     tea.UnitId,
 	}
 	if tea.Description != "" {
 		r.Description = &tea.Description
@@ -54,6 +56,7 @@ func NewTeaWithRatingResponseModel(tea *entity.TeaWithRating) *WithRatingRespons
 			ServePrice: tea.ServePrice,
 			UnitPrice:  tea.UnitPrice,
 			CategoryId: tea.CategoryId,
+			UnitId:     tea.UnitId,
 		},
 	}
 	if tea.Description != "" {

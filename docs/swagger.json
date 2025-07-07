@@ -1481,6 +1481,9 @@
                         "type": "string"
                     }
                 },
+                "unitId": {
+                    "type": "string"
+                },
                 "unitPrice": {
                     "type": "number"
                 }
@@ -1512,6 +1515,9 @@
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "unitId": {
+                    "type": "string"
                 },
                 "unitPrice": {
                     "type": "number"
@@ -1577,6 +1583,9 @@
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "unitId": {
+                    "type": "string"
                 },
                 "unitPrice": {
                     "type": "number"

@@ -1489,6 +1489,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "unitId": {
+                    "type": "string"
+                },
                 "unitPrice": {
                     "type": "number"
                 }
@@ -1520,6 +1523,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "unitId": {
+                    "type": "string"
                 },
                 "unitPrice": {
                     "type": "number"
@@ -1585,6 +1591,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_levchenki_tea-api_internal_entity.Tag"
                     }
+                },
+                "unitId": {
+                    "type": "string"
                 },
                 "unitPrice": {
                     "type": "number"

@@ -17,7 +17,7 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 	categoryRepository := postgres.NewCategoryRepository(db)
 	unitRepository := postgres.NewUnitRepository(db)
 
-	teaService := service.NewTeaService(teaRepository, tagRepository)
+	teaService := service.NewTeaService(teaRepository, tagRepository, unitRepository)
 	userService := service.NewUserService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository, teaRepository)
 	tagService := service.NewTagService(tagRepository)

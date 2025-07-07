@@ -189,6 +189,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 						t.updated_at,
 						t.is_hidden,
 						t.category_id,
+						t.unit_id,
 						coalesce(e.rating, 0)                                                  as rating,
 						coalesce(e.note, '')                                                   as note,
 						coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,
@@ -210,6 +211,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			t.updated_at,
 			t.is_hidden,
 			t.category_id,
+			t.unit_id,
 			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
 		from teas t`
 	}
@@ -314,6 +316,7 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 		UnitPrice:   inputTea.UnitPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
+		UnitId:      inputTea.UnitId,
 		IsHidden:    inputTea.IsHidden,
 	}
 	createdTea, err := r.insertTea(tea, tx)
@@ -348,9 +351,17 @@ func (r *TeaRepository) Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, 
 func (r *TeaRepository) insertTea(inputTea *entity.Tea, tx *sqlx.Tx) (*entity.Tea, error) {
 	createdTea := &entity.Tea{}
 	rows, err := tx.NamedQuery(`
-		insert into teas (name, serve_price, unit_price, description, category_id, is_hidden)
-		values (:name, :serve_price, :unit_price, nullif(:description, ''), :category_id, :is_hidden)
-		returning id, name, serve_price, unit_price, coalesce(description, '') as description, category_id, is_hidden`, inputTea)
+		insert into teas (name, serve_price, unit_price, description, category_id, unit_id, is_hidden)
+		values (:name, :serve_price, :unit_price, nullif(:description, ''), :category_id, :unit_id, :is_hidden)
+		returning 
+		    id, 
+			name,
+			serve_price,
+			unit_price,
+			coalesce(description, '') as description,
+			category_id,
+		    unit_id,
+			is_hidden`, inputTea)
 	if err != nil {
 		return nil, err
 	}
@@ -467,20 +478,29 @@ func (r *TeaRepository) updateTea(id uuid.UUID, inputTea *teaSchemas.RequestMode
 		UnitPrice:   inputTea.UnitPrice,
 		Description: inputTea.Description,
 		CategoryId:  inputTea.CategoryId,
+		UnitId:      inputTea.UnitId,
 		IsHidden:    inputTea.IsHidden,
 	}
 
 	rows, err := tx.NamedQuery(`
-		update teas set
-			name=:name,
+		update teas
+		set name=:name,
 			serve_price=:serve_price,
 			unit_price=:unit_price,
 			description=:description,
 			updated_at=now(),
 			category_id=:category_id,
+			unit_id=:unit_id,
 			is_hidden=:is_hidden
-			where id = :id
-		returning id, name, serve_price, unit_price, coalesce(description, '') as description, category_id, is_hidden
+		where id = :id
+		returning id,
+			name,
+			serve_price,
+			unit_price,
+			coalesce(description, '') as description,
+			category_id,
+		    unit_id,
+			is_hidden
 		`, tea)
 
 	if err != nil {
