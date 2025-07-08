@@ -34,6 +34,7 @@ func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 			t.updated_at,
 			is_hidden,
 			category_id,
+			unit_id,
 			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
 		from teas t
 	 		left join evaluations on t.id = evaluations.tea_id
@@ -66,6 +67,7 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 			   t.updated_at,
 			   is_hidden,
 			   category_id,
+			   unit_id,
 			   coalesce(rating, 0)                                                    as rating,
 			   coalesce(note, '')                                                     as note,
 			   coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,

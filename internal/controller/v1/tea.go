@@ -255,7 +255,7 @@ func (c *TeaController) UpdateTea(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, tea)
+	render.JSON(w, r, teaSchemas.NewTeaResponseModel(tea))
 }
 
 // Evaluate godoc
