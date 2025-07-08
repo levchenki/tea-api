@@ -139,7 +139,7 @@ func (r *TeaRepository) prepareCountQuery(filters *teaSchemas.Filters) (string, 
 	return countQuery, args, nil
 }
 
-func (r *TeaRepository) prepareMinMaxQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
+func (r *TeaRepository) prepareMinMaxPricesQuery(filters *teaSchemas.Filters) (string, []interface{}, error) {
 	var minMaxQuery string
 	isNotEmptyUser := filters.UserId != uuid.Nil
 	if isNotEmptyUser {
@@ -161,7 +161,12 @@ func (r *TeaRepository) prepareMinMaxQuery(filters *teaSchemas.Filters) (string,
 			    coalesce(max(t.serve_price), 0) as max
 			from teas t`
 	}
-	minMaxQuery, whereClause := r.selectAllWhereClause(minMaxQuery, filters)
+
+	priceFilters := *filters
+	priceFilters.MinServePrice = 0
+	priceFilters.MaxServePrice = 0
+
+	minMaxQuery, whereClause := r.selectAllWhereClause(minMaxQuery, &priceFilters)
 	minMaxQuery += whereClause
 
 	minMaxQuery, args, err := r.bindParams(minMaxQuery, filters)
@@ -656,7 +661,7 @@ func (r *TeaRepository) ExistsByCategoryId(categoryId uuid.UUID) (bool, error) {
 }
 
 func (r *TeaRepository) GetMinMaxServePrices(filters *teaSchemas.Filters) (float64, float64, error) {
-	query, args, err := r.prepareMinMaxQuery(filters)
+	query, args, err := r.prepareMinMaxPricesQuery(filters)
 	if err != nil {
 		return 0, 0, err
 	}
