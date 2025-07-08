@@ -40,9 +40,8 @@ services:
     build:
       context: ../tea-frontend
       dockerfile: Dockerfile
-      args:
-        VITE_TELEGRAM_BOT_ID: ${VITE_TELEGRAM_BOT_ID}
-        VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
+    env_file:
+      - ./.env
     networks:
       - tea_network
 
