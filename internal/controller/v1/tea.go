@@ -21,7 +21,9 @@ type TeaService interface {
 	CreateTea(tea *teaSchemas.RequestModel) (*entity.Tea, error)
 	DeleteTea(id uuid.UUID) error
 	UpdateTea(id uuid.UUID, tea *teaSchemas.RequestModel) (*entity.Tea, error)
+
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) (*entity.TeaWithRating, error)
+	DeleteEvaluation(userId, teaId uuid.UUID) error
 	ToggleFavourites(id uuid.UUID, userId uuid.UUID, isFavourite bool) error
 
 	GetMinMaxServePrices(filters *teaSchemas.Filters) (float64, float64, error)
@@ -305,6 +307,39 @@ func (c *TeaController) Evaluate(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, teaSchemas.NewTeaWithRatingResponseModel(evaluatedTea))
+}
+
+// DeleteEvaluation godoc
+//
+//	@Summary	Delete tea evaluation
+//	@Tags		Tea
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path	string	true	"Tea ID"
+//	@Success	200
+//	@Failure	400	{object}	errx.AppError
+//	@Failure	401	{object}	errx.AppError
+//	@Failure	404	{object}	errx.AppError
+//	@Failure	500	{object}	errx.AppError
+//	@Router		/api/v1/teas/{id}/evaluate [delete]
+//	@Security	BearerAuth
+func (c *TeaController) DeleteEvaluation(w http.ResponseWriter, r *http.Request) {
+	strId := chi.URLParam(r, "id")
+	teaId, err := uuid.Parse(strId)
+	if err != nil {
+		errorResponse := errx.NewBadRequestError(fmt.Errorf("invalid id"))
+		handleError(w, r, c.log, errorResponse)
+		return
+	}
+
+	userClaims := r.Context().Value("accessTokenClaims").(*userSchemas.AccessTokenClaims)
+
+	err = c.teaService.DeleteEvaluation(userClaims.Id, teaId)
+	if err != nil {
+		handleError(w, r, c.log, err)
+	}
+
+	render.Status(r, http.StatusOK)
 }
 
 // ToggleFavourites godoc

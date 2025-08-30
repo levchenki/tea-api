@@ -24,20 +24,19 @@ func NewTeaRepository(db *sqlx.DB) *TeaRepository {
 func (r *TeaRepository) GetById(id uuid.UUID) (*entity.TeaWithRating, error) {
 	tea := entity.TeaWithRating{}
 	query := `
-		select
-			t.id,
-			name,
-			serve_price,
-			unit_price,
-			coalesce(description, '') as description,
-			t.created_at,
-			t.updated_at,
-			is_hidden,
-			category_id,
-			unit_id,
-			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
+		select t.id,
+			   name,
+			   serve_price,
+			   unit_price,
+			   coalesce(description, '')                                                        as description,
+			   t.created_at,
+			   t.updated_at,
+			   is_hidden,
+			   category_id,
+			   unit_id,
+			   round(coalesce((select avg(rating) from evaluations where tea_id = t.id), 0), 2) as average_rating
 		from teas t
-	 		left join evaluations on t.id = evaluations.tea_id
+				 left join evaluations on t.id = evaluations.tea_id
 		where t.id = $1 
 		limit 1`
 	err := r.db.Get(&tea, query, id)
@@ -54,24 +53,24 @@ func (r *TeaRepository) GetByIdWithUser(id uuid.UUID, userId uuid.UUID) (*entity
 	tea := entity.TeaWithRating{}
 	query := `
 		with favourites as (select tea_id,
-						   user_id,
-						   true as is_favourite
-					from users_favourite_teas
-					where user_id = $1)
+								   user_id,
+								   true as is_favourite
+							from users_favourite_teas
+							where user_id = $1)
 		select t.id,
 			   name,
 			   serve_price,
 			   unit_price,
-			   coalesce(description, '')                                              as description,
+			   coalesce(description, '')                                                        as description,
 			   t.created_at,
 			   t.updated_at,
 			   is_hidden,
 			   category_id,
 			   unit_id,
-			   coalesce(rating, 0)                                                    as rating,
-			   coalesce(note, '')                                                     as note,
-			   coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,
-			   coalesce(is_favourite, false)                                          as is_favourite
+			   coalesce(rating, 0)                                                              as rating,
+			   coalesce(note, '')                                                               as note,
+			   round(coalesce((select avg(rating) from evaluations where tea_id = t.id), 0), 2) as average_rating,
+			   coalesce(is_favourite, false)                                                    as is_favourite
 		from teas t
 				 left join evaluations on t.id = evaluations.tea_id and user_id = $1
 				 left join favourites on t.id = favourites.tea_id
@@ -199,7 +198,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 						t.unit_id,
 						coalesce(e.rating, 0)                                                  as rating,
 						coalesce(e.note, '')                                                   as note,
-						coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating,
+					   	round(coalesce((select avg(rating) from evaluations where tea_id = t.id), 0), 2) as average_rating,
 						coalesce(favourites.is_favourite, false)                               as is_favourite
 		from teas t
 				 left join evaluations e on t.id = e.tea_id and user_id = :user_id
@@ -219,7 +218,7 @@ func (r *TeaRepository) prepareSelectAllQuery(filters *teaSchemas.Filters) (stri
 			t.is_hidden,
 			t.category_id,
 			t.unit_id,
-			coalesce((select avg(rating) from evaluations where tea_id = t.id), 0) as average_rating
+		   	round(coalesce((select avg(rating) from evaluations where tea_id = t.id), 0), 2) as average_rating
 		from teas t`
 	}
 
@@ -644,6 +643,29 @@ func (r *TeaRepository) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *tea
 		return err
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *TeaRepository) DeleteEvaluation(userId, teaId uuid.UUID) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	query := "delete from evaluations where user_id = $1 and tea_id = $2"
+
+	_, err = tx.Exec(query, userId, teaId)
+	if err != nil {
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
+	}
 	err = tx.Commit()
 	if err != nil {
 		return err

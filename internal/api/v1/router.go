@@ -53,6 +53,7 @@ func NewRouter(cfg *config.Config, db *sqlx.DB, log logx.AppLogger) *chi.Mux {
 		r.Group(func(r chi.Router) {
 			r.Use(authControllerV1.AuthMiddleware(true))
 			r.Post("/{id}/evaluate", teaControllerV1.Evaluate)
+			r.Delete("/{id}/evaluate", teaControllerV1.DeleteEvaluation)
 			r.Post("/{id}/favourite", teaControllerV1.ToggleFavourites)
 
 			r.Group(func(r chi.Router) {

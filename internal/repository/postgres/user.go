@@ -86,7 +86,11 @@ func (r *UserRepository) SaveRefreshToken(userId, refreshTokenId uuid.UUID) erro
 		return err
 	}
 	_, err = tx.Exec(
-		"update users set refresh_token_id = $1 where id = $2", refreshTokenId, userId,
+		`
+		update users
+		set refresh_token_id = $1,
+		    updated_at = now()
+		where id = $2`, refreshTokenId, userId,
 	)
 	if err != nil {
 		errRollback := tx.Rollback()

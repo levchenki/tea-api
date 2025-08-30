@@ -15,7 +15,10 @@ type TeaRepository interface {
 	Create(inputTea *teaSchemas.RequestModel) (*entity.Tea, error)
 	Delete(id uuid.UUID) error
 	Update(id uuid.UUID, inputTea *teaSchemas.RequestModel, tagsToInsert, tagsToDelete []uuid.UUID) (*entity.Tea, error)
+
 	Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSchemas.Evaluation) error
+	DeleteEvaluation(userId, teaId uuid.UUID) error
+
 	Exists(id uuid.UUID) (bool, error)
 	ExistsByName(existedId uuid.UUID, name string) (bool, error)
 
@@ -253,6 +256,23 @@ func (s *TeaService) Evaluate(id uuid.UUID, userId uuid.UUID, evaluation *teaSch
 		return nil, err
 	}
 	return evaluatedTea, nil
+}
+
+func (s *TeaService) DeleteEvaluation(userId, teaId uuid.UUID) error {
+	exists, err := s.teaRepository.Exists(teaId)
+	if err != nil {
+		return err
+	}
+	if exists == false {
+		err := fmt.Errorf("tea with id %s is not found", teaId.String())
+		return errx.NewNotFoundError(err)
+	}
+
+	err = s.teaRepository.DeleteEvaluation(userId, teaId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *TeaService) GetMinMaxServePrices(filters *teaSchemas.Filters) (float64, float64, error) {
