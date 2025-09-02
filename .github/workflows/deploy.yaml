@@ -1,0 +1,61 @@
+name: Build container to Github Container Registry
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+env:
+  IMAGE_NAME: tea-api
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-22.04
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+
+            if [ -z "$LATEST_TAG" ]; then
+              VERSION="0.1.0"
+            else
+              VERSION="${LATEST_TAG#v}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+              PATCH=$((PATCH + 1))
+              VERSION="$MAJOR.$MINOR.$PATCH"
+            fi
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version: $VERSION"
+
+      - name: Build Docker image
+        run: docker build . -t $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Tag and Push Docker image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
