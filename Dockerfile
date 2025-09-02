@@ -15,4 +15,5 @@ COPY --from=builder /app/migrations/postgres ./migrations/postgres
 
 EXPOSE 8080
 
+#fake commit
 CMD ["./target/tea-api"]
